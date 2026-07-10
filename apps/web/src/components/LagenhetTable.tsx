@@ -9,9 +9,10 @@ import {
   type FilterFn,
   useReactTable,
 } from '@tanstack/react-table'
-import { ChevronDownIcon } from 'lucide-react'
+import { ChevronDownIcon, HeartIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -52,9 +53,11 @@ const columnHelper = createColumnHelper<Lagenhet>()
 
 type LagenhetTableProps = {
   lagenheter: Lagenhet[]
+  isFavorite: (objektNr: string) => boolean
+  onToggleFavorite: (lagenhet: Lagenhet) => void
 }
 
-export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
+export function LagenhetTable({ lagenheter, isFavorite, onToggleFavorite }: LagenhetTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const omraden = useMemo(
@@ -64,6 +67,29 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
 
   const columns = useMemo(
     () => [
+      columnHelper.display({
+        id: 'favorite',
+        header: '',
+        cell: ({ row }) => {
+          const favorited = isFavorite(row.original.objektNr)
+
+          return (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={favorited ? 'Ta bort från sparade' : 'Spara lägenhet'}
+              aria-pressed={favorited}
+              onClick={() => onToggleFavorite(row.original)}
+            >
+              <HeartIcon
+                className={cn(favorited && 'fill-red-500 text-red-500')}
+              />
+            </Button>
+          )
+        },
+        enableColumnFilter: false,
+      }),
       columnHelper.display({
         id: 'bild',
         header: 'Bild',
@@ -109,7 +135,7 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
         ),
       }),
     ],
-    [],
+    [isFavorite, onToggleFavorite],
   )
 
   const table = useReactTable({
