@@ -1,11 +1,13 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowLeftIcon, ExternalLinkIcon } from 'lucide-react'
+import { ArrowLeftIcon, ExternalLinkIcon, HeartIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { LagenhetBildGalleri } from '@/components/LagenhetBildGalleri'
 import { LagenhetPlanlosningSheet } from '@/components/LagenhetPlanlosningSheet'
 import { OpenMapsButton } from '@/components/OpenMapsButton'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { useFavoriteLagenheter } from '#/hooks/useFavoriteLagenheter'
 import { buildStudentbostaderDetaljUrl } from '@/lib/lagenheter'
 import { loadLagenhetListSearch, type LagenhetListSearch } from '#/lib/lagenhet-filters'
 import type { IntresseStatus } from '#/types/intresse'
@@ -21,6 +23,8 @@ type LagenhetDetailProps = {
 
 export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps) {
   const [listSearch, setListSearch] = useState<LagenhetListSearch>({})
+  const { isFavorite, toggleFavorite } = useFavoriteLagenheter()
+  const favorited = isFavorite(lagenhet.objektNr)
 
   useEffect(() => {
     setListSearch(loadLagenhetListSearch() ?? {})
@@ -80,6 +84,16 @@ export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps
           </dl>
 
           <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              aria-label={favorited ? 'Ta bort från sparade' : 'Spara lägenhet'}
+              aria-pressed={favorited}
+              onClick={() => toggleFavorite(lagenhet)}
+            >
+              <HeartIcon className={cn(favorited && 'fill-red-500 text-red-500')} />
+              {favorited ? 'Sparad' : 'Spara'}
+            </Button>
             <Button
               render={
                 <a
