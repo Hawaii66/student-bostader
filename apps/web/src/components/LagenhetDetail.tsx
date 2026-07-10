@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowLeftIcon, ExternalLinkIcon } from 'lucide-react'
 
+import { LagenhetBildGalleri } from '@/components/LagenhetBildGalleri'
 import { Button } from '@/components/ui/button'
-import { withBildDimensions } from '@/lib/bilder'
 import type { Lagenhet } from '#/types/lagenhet'
 
 const numberFormatter = new Intl.NumberFormat('sv-SE')
@@ -29,30 +29,7 @@ export function LagenhetDetail({ lagenhet }: LagenhetDetailProps) {
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-        <div className="space-y-4">
-          <div className="overflow-hidden rounded-xl border">
-            <img
-              src={withBildDimensions(bilder[0].url, 960, 720)}
-              alt={bilder[0].text ?? lagenhet.adress}
-              className="aspect-[4/3] w-full object-cover"
-            />
-          </div>
-
-          {bilder.length > 1 && (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {bilder.slice(1).map((bild, index) => (
-                <div key={`${bild.url}-${index}`} className="overflow-hidden rounded-lg border">
-                  <img
-                    src={withBildDimensions(bild.url, 640, 360)}
-                    alt={bild.text ?? lagenhet.adress}
-                    className="aspect-video w-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <LagenhetBildGalleri bilder={bilder} adress={lagenhet.adress} />
 
         <div className="space-y-6">
           <div>
