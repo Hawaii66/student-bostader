@@ -1,8 +1,12 @@
-import { createServerFn } from '@tanstack/react-start'
+import { createIsomorphicFn, createServerFn } from '@tanstack/react-start'
 
-import type { IntresseStatus } from '#/types/intresse'
+import type { IntresseIndexFile, IntresseStatus } from '#/types/intresse'
 
 const WIDGETS_BASE_URL = 'https://marknad.studentbostader.se/widgets/'
+const EMPTY_INTRESSE_INDEX: IntresseIndexFile = {
+  fetchedAt: '1970-01-01T00:00:00.000Z',
+  data: {},
+}
 
 function parseJsonp(body: string): unknown {
   const start = body.indexOf('(')
@@ -100,16 +104,93 @@ async function fetchIntresseStatusHtml(refid: string): Promise<string | null> {
   return parsed.html?.['objektintressestatus'] ?? null
 }
 
+async function fetchIntresseStatusForRefid(refid: string): Promise<IntresseStatus | null> {
+  const html = await fetchIntresseStatusHtml(refid)
+  if (!html) return null
+
+  const status = parseIntresseStatusHtml(html)
+  if (status.topPoang.length === 0 && status.antalIntresseanmalningar === null) {
+    return null
+  }
+
+  return status
+}
+
+async function mapWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<void>,
+): Promise<void> {
+  let nextIndex = 0
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex
+      nextIndex += 1
+      await fn(items[index])
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, () => worker()),
+  )
+}
+
+const loadIntresseIndex = createIsomorphicFn()
+  .client(async (): Promise<IntresseIndexFile> => {
+    const response = await fetch(`${import.meta.env.BASE_URL}intresse.json`)
+    if (!response.ok) {
+      return EMPTY_INTRESSE_INDEX
+    }
+    return response.json() as Promise<IntresseIndexFile>
+  })
+  .server(async (): Promise<IntresseIndexFile> => {
+    const { readFile } = await import('node:fs/promises')
+    const { join } = await import('node:path')
+
+    try {
+      const raw = await readFile(join(process.cwd(), 'public/intresse.json'), 'utf-8')
+      return JSON.parse(raw) as IntresseIndexFile
+    } catch {
+      return EMPTY_INTRESSE_INDEX
+    }
+  })
+
+export async function getIntresseIndex(): Promise<IntresseIndexFile> {
+  return loadIntresseIndex()
+}
+
 export const getIntresseStatus = createServerFn({ method: 'GET' })
   .inputValidator((refid: string) => refid)
   .handler(async ({ data: refid }): Promise<IntresseStatus | null> => {
-    const html = await fetchIntresseStatusHtml(refid)
-    if (!html) return null
-
-    const status = parseIntresseStatusHtml(html)
-    if (status.topPoang.length === 0 && status.antalIntresseanmalningar === null) {
-      return null
-    }
-
-    return status
+    return fetchIntresseStatusForRefid(refid)
   })
+
+export const refreshIntresseIndex = createServerFn({ method: 'POST' })
+  .inputValidator((refids: string[]) => refids)
+  .handler(async ({ data: refids }): Promise<IntresseIndexFile> => {
+    const data: Record<string, IntresseStatus> = {}
+    let completed = 0
+
+    await mapWithConcurrency(refids, 3, async (refid) => {
+      try {
+        const status = await fetchIntresseStatusForRefid(refid)
+        if (status) {
+          data[refid] = status
+        }
+      } catch {
+        // Skip failed refids
+      }
+
+      completed += 1
+      if (completed < refids.length) {
+        await new Promise((resolve) => setTimeout(resolve, 200))
+      }
+    })
+
+    return {
+      fetchedAt: new Date().toISOString(),
+      data,
+    }
+  })
+

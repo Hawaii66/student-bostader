@@ -80,6 +80,7 @@ type LagenhetTableProps = {
   onSortingChange: (sorting: SortingState) => void
   showOnlyFavorites?: boolean
   onShowOnlyFavoritesChange?: (value: boolean) => void
+  onNavigateToDetail?: () => void
 }
 
 export function LagenhetTable({
@@ -92,6 +93,7 @@ export function LagenhetTable({
   onSortingChange,
   showOnlyFavorites = false,
   onShowOnlyFavoritesChange,
+  onNavigateToDetail,
 }: LagenhetTableProps) {
   const [filterDialogOpen, setFilterDialogOpen] = useState(false)
 
@@ -330,6 +332,7 @@ export function LagenhetTable({
                           <Link
                             to="/lagenhet/$objektNr"
                             params={{ objektNr: row.original.objektNr }}
+                            onClick={onNavigateToDetail}
                             className="block px-4 py-3 text-inherit no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                             aria-label={
                               cell.column.id === 'bild'

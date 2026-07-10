@@ -15,6 +15,7 @@ import {
   saveLagenhetListSearch,
   tableStateToLagenhetListSearch,
 } from '#/lib/lagenhet-filters'
+import { saveListDetailReturn } from '#/lib/detail-return'
 import { getLagenheter } from '#/lib/lagenheter'
 import { pageTitle, site } from '#/lib/site'
 
@@ -107,6 +108,7 @@ function Home() {
           onShowOnlyFavoritesChange={(nextShowOnlyFavorites) =>
             updateTableState(columnFilters, sorting, nextShowOnlyFavorites)
           }
+          onNavigateToDetail={() => saveListDetailReturn(search)}
         />
       </div>
       <FavoriteLagenheterSheet
@@ -118,6 +120,7 @@ function Home() {
           updateTableState(columnFilters, sorting, true)
           setSheetOpen(false)
         }}
+        onNavigateToDetail={() => saveListDetailReturn(search)}
       />
     </div>
   )

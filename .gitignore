@@ -11,3 +11,5 @@ dist
 
 response.md
 /apps/web/public/lagenheter.json
+/apps/web/public/intresse.json
+.pnpm-store

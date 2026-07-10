@@ -10,6 +10,9 @@ import { cn } from '@/lib/utils'
 import { useFavoriteLagenheter } from '#/hooks/useFavoriteLagenheter'
 import { buildStudentbostaderDetaljUrl } from '@/lib/lagenheter'
 import { loadLagenhetListSearch, type LagenhetListSearch } from '#/lib/lagenhet-filters'
+import { getDetailBackLabel, loadDetailReturn } from '#/lib/detail-return'
+import type { KonkurrensSearch } from '#/lib/konkurrens-state'
+import { isPlaceholderPoang } from '#/lib/konkurrens'
 import type { IntresseStatus } from '#/types/intresse'
 import type { Lagenhet } from '#/types/lagenhet'
 
@@ -21,13 +24,35 @@ type LagenhetDetailProps = {
   intresseStatus: IntresseStatus | null
 }
 
+type BackTarget =
+  | { to: '/'; search: LagenhetListSearch; label: string }
+  | { to: '/konkurrens'; search: KonkurrensSearch; label: string }
+
 export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps) {
-  const [listSearch, setListSearch] = useState<LagenhetListSearch>({})
+  const [backTarget, setBackTarget] = useState<BackTarget>({
+    to: '/',
+    search: {},
+    label: getDetailBackLabel('/'),
+  })
   const { isFavorite, toggleFavorite } = useFavoriteLagenheter()
   const favorited = isFavorite(lagenhet.objektNr)
 
   useEffect(() => {
-    setListSearch(loadLagenhetListSearch() ?? {})
+    const detailReturn = loadDetailReturn()
+    if (detailReturn) {
+      setBackTarget({
+        to: detailReturn.to,
+        search: detailReturn.search,
+        label: getDetailBackLabel(detailReturn.to),
+      })
+      return
+    }
+
+    setBackTarget({
+      to: '/',
+      search: loadLagenhetListSearch() ?? {},
+      label: getDetailBackLabel('/'),
+    })
   }, [])
 
   const bilder =
@@ -38,12 +63,12 @@ export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps
   return (
     <div className="mx-auto max-w-5xl p-8">
       <Link
-        to="/"
-        search={listSearch}
+        to={backTarget.to}
+        search={backTarget.search}
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeftIcon className="size-4" />
-        Tillbaka till listan
+        {backTarget.label}
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
@@ -131,7 +156,11 @@ export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps
                     className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm"
                   >
                     <span className="text-muted-foreground">{index + 1}.</span>
-                    <span className="font-medium">{numberFormatter.format(poang)} p</span>
+                    {isPlaceholderPoang(poang) ? (
+                      <span className="text-muted-foreground">0 p — ingen anmälan (standard)</span>
+                    ) : (
+                      <span className="font-medium">{numberFormatter.format(poang)} p</span>
+                    )}
                   </li>
                 ))}
               </ol>
