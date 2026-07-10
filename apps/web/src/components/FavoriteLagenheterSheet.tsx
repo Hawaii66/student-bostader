@@ -18,6 +18,7 @@ type FavoriteLagenheterSheetProps = {
   onOpenChange: (open: boolean) => void
   favorites: Lagenhet[]
   onToggleFavorite: (lagenhet: Lagenhet) => void
+  onShowInTable: () => void
 }
 
 export function FavoriteLagenheterSheet({
@@ -25,6 +26,7 @@ export function FavoriteLagenheterSheet({
   onOpenChange,
   favorites,
   onToggleFavorite,
+  onShowInTable,
 }: FavoriteLagenheterSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -37,6 +39,15 @@ export function FavoriteLagenheterSheet({
               : `${favorites.length} sparad${favorites.length === 1 ? '' : 'e'} lägenhet${favorites.length === 1 ? '' : 'er'}.`}
           </SheetDescription>
         </SheetHeader>
+
+        {favorites.length > 0 && (
+          <div className="px-4 pb-3">
+            <Button type="button" className="w-full" onClick={onShowInTable}>
+              <HeartIcon className="fill-red-500 text-red-500" />
+              Visa endast sparade i tabellen
+            </Button>
+          </div>
+        )}
 
         {favorites.length > 0 && (
           <ul className="flex flex-col gap-3 px-4 pb-4">
