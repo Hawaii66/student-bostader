@@ -79,12 +79,21 @@ function parsePoang(value: string): number {
   return parseSwedishNumber(value.replace(/p$/i, ""));
 }
 
+const STUDENTBOSTADER_DETALJ_BASE =
+  "https://www.studentbostader.se/soker-bostad/lediga-bostader/bostad/";
+
 function parseRefid(detaljUrl: string): string {
   const match = detaljUrl.match(/refid=([^&]+)/);
   if (!match) {
     throw new Error(`Could not extract refid from detaljUrl: ${detaljUrl}`);
   }
   return match[1];
+}
+
+export function buildDetaljUrl(refid: string): string {
+  const url = new URL(STUDENTBOSTADER_DETALJ_BASE);
+  url.searchParams.set("refid", refid);
+  return url.toString();
 }
 
 /** Image URLs from the API 404 without width/height query params. */
@@ -104,6 +113,8 @@ export function withBildDimensions(
 }
 
 export function normalizeLagenhet(raw: RawLagenhet): Lagenhet {
+  const refid = parseRefid(raw.detaljUrl);
+
   return lagenhetSchema.parse({
     objektNr: raw.objektNr,
     tinyObjektNr: raw.tinyObjektNr,
@@ -119,8 +130,8 @@ export function normalizeLagenhet(raw: RawLagenhet): Lagenhet {
     antalVaningar: raw.antalVaningar ? Number(raw.antalVaningar) : null,
     inflyttningDatum: raw.inflyttningDatum,
     inflyttningTidigareDatum: raw.inflyttningTidigareDatum,
-    detaljUrl: raw.detaljUrl,
-    refid: parseRefid(raw.detaljUrl),
+    detaljUrl: buildDetaljUrl(refid),
+    refid,
     hiss: raw.hiss.toLowerCase() === "ja",
     beskrivning: raw.fritext.trim(),
     poang: parsePoang(raw.poang),

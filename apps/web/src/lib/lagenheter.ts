@@ -5,6 +5,15 @@ import { createServerFn } from '@tanstack/react-start'
 
 import type { Lagenhet } from '#/types/lagenhet'
 
+const STUDENTBOSTADER_DETALJ_BASE =
+  'https://www.studentbostader.se/soker-bostad/lediga-bostader/bostad/'
+
+export function buildStudentbostaderDetaljUrl(refid: string): string {
+  const url = new URL(STUDENTBOSTADER_DETALJ_BASE)
+  url.searchParams.set('refid', refid)
+  return url.toString()
+}
+
 async function loadLagenheter(): Promise<Lagenhet[]> {
   const filePath = join(process.cwd(), 'public/lagenheter.json')
   const raw = await readFile(filePath, 'utf-8')

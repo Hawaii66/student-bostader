@@ -3,6 +3,7 @@ import { ArrowLeftIcon, ExternalLinkIcon } from 'lucide-react'
 
 import { LagenhetBildGalleri } from '@/components/LagenhetBildGalleri'
 import { Button } from '@/components/ui/button'
+import { buildStudentbostaderDetaljUrl } from '@/lib/lagenheter'
 import type { Lagenhet } from '#/types/lagenhet'
 
 const numberFormatter = new Intl.NumberFormat('sv-SE')
@@ -98,7 +99,15 @@ export function LagenhetDetail({ lagenhet }: LagenhetDetailProps) {
             </section>
           )}
 
-          <Button render={<a href={lagenhet.detaljUrl} target="_blank" rel="noopener noreferrer" />}>
+          <Button
+            render={
+              <a
+                href={buildStudentbostaderDetaljUrl(lagenhet.refid)}
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            }
+          >
             Visa på Studentbostäder
             <ExternalLinkIcon />
           </Button>
