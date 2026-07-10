@@ -87,6 +87,22 @@ function parseRefid(detaljUrl: string): string {
   return match[1];
 }
 
+/** Image URLs from the API 404 without width/height query params. */
+export function withBildDimensions(
+  url: string,
+  width = 750,
+  height = 435,
+): string {
+  const parsed = new URL(url);
+  if (!parsed.searchParams.has("width")) {
+    parsed.searchParams.set("width", String(width));
+  }
+  if (!parsed.searchParams.has("height")) {
+    parsed.searchParams.set("height", String(height));
+  }
+  return parsed.toString();
+}
+
 export function normalizeLagenhet(raw: RawLagenhet): Lagenhet {
   return lagenhetSchema.parse({
     objektNr: raw.objektNr,
@@ -109,8 +125,11 @@ export function normalizeLagenhet(raw: RawLagenhet): Lagenhet {
     beskrivning: raw.fritext.trim(),
     poang: parsePoang(raw.poang),
     egenskaper: raw.egenskaper,
-    bildUrl: raw.bild.url,
-    bilder: raw.bilder,
+    bildUrl: withBildDimensions(raw.bild.url),
+    bilder: raw.bilder.map((bild) => ({
+      ...bild,
+      url: withBildDimensions(bild.url),
+    })),
     publiceratDatum: raw.publiceratDatum,
     harIntresseanmaltsAvInloggadKund: raw.harIntresseanmaltsAvInloggadKund,
   });

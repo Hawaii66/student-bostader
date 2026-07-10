@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { withBildDimensions } from '@/lib/bilder'
 import type { Lagenhet } from '#/types/lagenhet'
 
 const numberFormatter = new Intl.NumberFormat('sv-SE')
@@ -68,13 +69,14 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
         id: 'bild',
         header: 'Bild',
         cell: ({ row }) => (
-          <img
-            src={row.original.bildUrl}
-            alt={row.original.adress}
-            className="h-20 w-28 rounded-md object-cover"
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
+          <div className="aspect-video w-48 shrink-0 overflow-hidden rounded-md bg-muted">
+            <img
+              src={withBildDimensions(row.original.bildUrl, 640, 360)}
+              alt={row.original.adress}
+              className="size-full object-cover"
+              loading="lazy"
+            />
+          </div>
         ),
         enableColumnFilter: false,
       }),
@@ -156,7 +158,10 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="px-4">
+                  <TableHead
+                    key={header.id}
+                    className={header.column.id === 'bild' ? 'w-48 min-w-48 px-4' : 'px-4'}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -166,7 +171,10 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
             ))}
             <TableRow className="hover:bg-transparent">
               {table.getHeaderGroups()[0]?.headers.map((header) => (
-                <TableHead key={`${header.id}-filter`} className="px-4 font-normal">
+                <TableHead
+                  key={`${header.id}-filter`}
+                  className={header.column.id === 'bild' ? 'w-48 min-w-48 px-4 font-normal' : 'px-4 font-normal'}
+                >
                   {header.column.getCanFilter() ? (
                     <ColumnFilter column={header.column} omraden={omraden} />
                   ) : null}
@@ -185,7 +193,10 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.original.objektNr}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3">
+                    <TableCell
+                      key={cell.id}
+                      className={cell.column.id === 'bild' ? 'w-48 min-w-48 px-4 py-3' : 'px-4 py-3'}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
