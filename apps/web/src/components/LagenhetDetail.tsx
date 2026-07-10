@@ -3,6 +3,7 @@ import { ArrowLeftIcon, ExternalLinkIcon } from 'lucide-react'
 
 import { LagenhetBildGalleri } from '@/components/LagenhetBildGalleri'
 import { LagenhetPlanlosningSheet } from '@/components/LagenhetPlanlosningSheet'
+import { OpenMapsButton } from '@/components/OpenMapsButton'
 import { Button } from '@/components/ui/button'
 import { buildStudentbostaderDetaljUrl } from '@/lib/lagenheter'
 import type { IntresseStatus } from '#/types/intresse'
@@ -82,6 +83,7 @@ export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps
               Visa på Studentbostäder
               <ExternalLinkIcon />
             </Button>
+            <OpenMapsButton adress={lagenhet.adress} />
             {lagenhet.planlosningUrl && (
               <LagenhetPlanlosningSheet
                 planlosningUrl={lagenhet.planlosningUrl}
