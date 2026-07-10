@@ -18,11 +18,19 @@ import {
   ArrowUpIcon,
   ChevronDownIcon,
   HeartIcon,
+  ListFilterIcon,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -81,6 +89,7 @@ export function LagenhetTable({
 }: LagenhetTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false)
 
   const visibleLagenheter = useMemo(
     () =>
@@ -233,12 +242,55 @@ export function LagenhetTable({
             <>Visar {filteredCount} av {lagenheter.length} lägenheter</>
           )}
         </p>
-        {hasActiveFilters && (
-          <Button type="button" variant="link" size="sm" onClick={clearFilters}>
-            Rensa filter
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setFilterDialogOpen(true)}
+          >
+            <ListFilterIcon />
+            Filter
+            {hasActiveFilters && (
+              <span className="size-2 rounded-full bg-primary" aria-hidden />
+            )}
           </Button>
-        )}
+          {hasActiveFilters && (
+            <Button type="button" variant="link" size="sm" onClick={clearFilters}>
+              Rensa filter
+            </Button>
+          )}
+        </div>
       </div>
+
+      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filter</DialogTitle>
+            <DialogDescription>Filtrera listan efter dina önskemål.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            {table
+              .getAllColumns()
+              .filter((column) => column.getCanFilter())
+              .map((column) => (
+                <FilterField key={column.id} label={filterLabels[column.id] ?? column.id}>
+                  <ColumnFilter column={column} omraden={omraden} typer={typer} />
+                </FilterField>
+              ))}
+          </div>
+          <div className="flex justify-end gap-2">
+            {hasActiveFilters && (
+              <Button type="button" variant="outline" onClick={clearFilters}>
+                Rensa
+              </Button>
+            )}
+            <Button type="button" onClick={() => setFilterDialogOpen(false)}>
+              Visa resultat
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="rounded-lg border">
         <Table>
@@ -261,18 +313,6 @@ export function LagenhetTable({
                 ))}
               </TableRow>
             ))}
-            <TableRow className="hover:bg-transparent">
-              {table.getHeaderGroups()[0]?.headers.map((header) => (
-                <TableHead
-                  key={`${header.id}-filter`}
-                  className={header.column.id === 'bild' ? 'w-48 min-w-48 px-4 font-normal' : 'px-4 font-normal'}
-                >
-                  {header.column.getCanFilter() ? (
-                    <ColumnFilter column={header.column} omraden={omraden} typer={typer} />
-                  ) : null}
-                </TableHead>
-              ))}
-            </TableRow>
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.length === 0 ? (
@@ -318,6 +358,29 @@ export function LagenhetTable({
           </TableBody>
         </Table>
       </div>
+    </div>
+  )
+}
+
+const filterLabels: Record<string, string> = {
+  omrade: 'Område',
+  typOvergripande: 'Typ',
+  adress: 'Adress',
+  hyra: 'Hyra',
+  yta: 'Storlek',
+  poang: 'Max poäng just nu',
+}
+
+type FilterFieldProps = {
+  label: string
+  children: ReactNode
+}
+
+function FilterField({ label, children }: FilterFieldProps) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium">{label}</p>
+      {children}
     </div>
   )
 }
@@ -423,7 +486,7 @@ function ColumnFilter({ column, omraden, typer }: ColumnFilterProps) {
     }
 
     return (
-      <div className="flex gap-1">
+      <div className="grid grid-cols-2 gap-2">
         <Input
           type="number"
           aria-label={label.min}
@@ -431,7 +494,7 @@ function ColumnFilter({ column, omraden, typer }: ColumnFilterProps) {
           value={range.min ?? ''}
           min={0}
           onChange={(e) => updateRange('min', e.target.value)}
-          className="min-w-0 normal-case"
+          className="normal-case"
         />
         <Input
           type="number"
@@ -440,7 +503,7 @@ function ColumnFilter({ column, omraden, typer }: ColumnFilterProps) {
           value={range.max ?? ''}
           min={0}
           onChange={(e) => updateRange('max', e.target.value)}
-          className="min-w-0 normal-case"
+          className="normal-case"
         />
       </div>
     )
