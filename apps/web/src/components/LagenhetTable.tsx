@@ -68,15 +68,32 @@ type LagenhetTableProps = {
   lagenheter: Lagenhet[]
   isFavorite: (objektNr: string) => boolean
   onToggleFavorite: (lagenhet: Lagenhet) => void
+  showOnlyFavorites?: boolean
+  onShowOnlyFavoritesChange?: (value: boolean) => void
 }
 
-export function LagenhetTable({ lagenheter, isFavorite, onToggleFavorite }: LagenhetTableProps) {
+export function LagenhetTable({
+  lagenheter,
+  isFavorite,
+  onToggleFavorite,
+  showOnlyFavorites = false,
+  onShowOnlyFavoritesChange,
+}: LagenhetTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
 
+  const visibleLagenheter = useMemo(
+    () =>
+      showOnlyFavorites
+        ? lagenheter.filter((lagenhet) => isFavorite(lagenhet.objektNr))
+        : lagenheter,
+    [lagenheter, showOnlyFavorites, isFavorite],
+  )
+
   const omraden = useMemo(
-    () => [...new Set(lagenheter.map((l) => l.omrade))].sort((a, b) => a.localeCompare(b, 'sv')),
-    [lagenheter],
+    () =>
+      [...new Set(visibleLagenheter.map((l) => l.omrade))].sort((a, b) => a.localeCompare(b, 'sv')),
+    [visibleLagenheter],
   )
 
   const columns = useMemo(
@@ -157,7 +174,7 @@ export function LagenhetTable({ lagenheter, isFavorite, onToggleFavorite }: Lage
   )
 
   const table = useReactTable({
-    data: lagenheter,
+    data: visibleLagenheter,
     columns,
     state: { columnFilters, sorting },
     onColumnFiltersChange: setColumnFilters,
@@ -168,7 +185,9 @@ export function LagenhetTable({ lagenheter, isFavorite, onToggleFavorite }: Lage
   })
 
   const filteredCount = table.getFilteredRowModel().rows.length
-  const hasActiveFilters = columnFilters.some((filter) => {
+  const hasActiveFilters =
+    showOnlyFavorites ||
+    columnFilters.some((filter) => {
     const value = filter.value
     if (value === undefined || value === '' || value === null) return false
     if (Array.isArray(value)) return value.length > 0
@@ -176,8 +195,13 @@ export function LagenhetTable({ lagenheter, isFavorite, onToggleFavorite }: Lage
       const range = value as RangeFilterValue
       return range.min !== undefined || range.max !== undefined
     }
-    return true
-  })
+      return true
+    })
+
+  const clearFilters = () => {
+    setColumnFilters([])
+    onShowOnlyFavoritesChange?.(false)
+  }
 
   if (lagenheter.length === 0) {
     return <p className="text-muted-foreground">Inga lägenheter hittades.</p>
@@ -187,10 +211,16 @@ export function LagenhetTable({ lagenheter, isFavorite, onToggleFavorite }: Lage
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
         <p>
-          Visar {filteredCount} av {lagenheter.length} lägenheter
+          {showOnlyFavorites ? (
+            <>
+              Visar {filteredCount} av {visibleLagenheter.length} sparade lägenheter
+            </>
+          ) : (
+            <>Visar {filteredCount} av {lagenheter.length} lägenheter</>
+          )}
         </p>
         {hasActiveFilters && (
-          <Button type="button" variant="link" size="sm" onClick={() => setColumnFilters([])}>
+          <Button type="button" variant="link" size="sm" onClick={clearFilters}>
             Rensa filter
           </Button>
         )}

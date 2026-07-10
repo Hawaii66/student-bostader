@@ -16,6 +16,7 @@ export const Route = createFileRoute('/')({
 function Home() {
   const lagenheter = Route.useLoaderData()
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false)
   const { favorites, isFavorite, toggleFavorite } = useFavoriteLagenheter()
 
   return (
@@ -35,6 +36,8 @@ function Home() {
           lagenheter={lagenheter}
           isFavorite={isFavorite}
           onToggleFavorite={toggleFavorite}
+          showOnlyFavorites={showOnlyFavorites}
+          onShowOnlyFavoritesChange={setShowOnlyFavorites}
         />
       </div>
       <FavoriteLagenheterSheet
@@ -42,6 +45,10 @@ function Home() {
         onOpenChange={setSheetOpen}
         favorites={favorites}
         onToggleFavorite={toggleFavorite}
+        onShowInTable={() => {
+          setShowOnlyFavorites(true)
+          setSheetOpen(false)
+        }}
       />
     </div>
   )
