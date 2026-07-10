@@ -14,6 +14,22 @@ export function buildStudentbostaderDetaljUrl(refid: string): string {
   return url.toString()
 }
 
+function buildMapsQuery(adress: string): string {
+  return encodeURIComponent(`${adress}, Linköping`)
+}
+
+export function buildGoogleMapsUrl(adress: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${buildMapsQuery(adress)}`
+}
+
+export function buildAppleMapsUrl(adress: string): string {
+  return `https://maps.apple.com/?q=${buildMapsQuery(adress)}`
+}
+
+export function buildGoogleEarthUrl(adress: string): string {
+  return `https://earth.google.com/web/search/${buildMapsQuery(adress)}`
+}
+
 async function loadLagenheter(): Promise<Lagenhet[]> {
   const filePath = join(process.cwd(), 'public/lagenheter.json')
   const raw = await readFile(filePath, 'utf-8')
