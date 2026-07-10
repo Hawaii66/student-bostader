@@ -91,9 +91,10 @@ export function LagenhetDetail({ lagenhet }: LagenhetDetailProps) {
           {lagenhet.beskrivning && (
             <section>
               <h2 className="text-lg font-semibold">Beskrivning</h2>
-              <p className="mt-2 whitespace-pre-line text-muted-foreground">
-                {lagenhet.beskrivning}
-              </p>
+              <div
+                className="mt-2 text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: lagenhet.beskrivning }}
+              />
             </section>
           )}
 
@@ -105,11 +106,14 @@ export function LagenhetDetail({ lagenhet }: LagenhetDetailProps) {
                   <li
                     key={egenskap.id}
                     className="rounded-lg border px-3 py-2 text-sm"
-                    title={egenskap.beskrivningDetalj || undefined}
+                    title={stripHtml(egenskap.beskrivningDetalj) || undefined}
                   >
                     <span className="font-medium">{egenskap.beskrivningKort || egenskap.beskrivning}</span>
                     {egenskap.beskrivningDetalj && (
-                      <p className="mt-0.5 text-muted-foreground">{egenskap.beskrivningDetalj}</p>
+                      <div
+                        className="mt-0.5 text-muted-foreground"
+                        dangerouslySetInnerHTML={{ __html: egenskap.beskrivningDetalj }}
+                      />
                     )}
                   </li>
                 ))}
@@ -145,4 +149,8 @@ function formatDate(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return dateFormatter.format(date)
+}
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
