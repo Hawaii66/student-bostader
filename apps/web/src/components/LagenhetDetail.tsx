@@ -124,18 +124,30 @@ export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps
             </section>
           )}
 
-          <Button
-            render={
-              <a
-                href={buildStudentbostaderDetaljUrl(lagenhet.refid)}
-                target="_blank"
-                rel="noopener noreferrer"
-              />
-            }
-          >
-            Visa på Studentbostäder
-            <ExternalLinkIcon />
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              render={
+                <a
+                  href={buildStudentbostaderDetaljUrl(lagenhet.refid)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
+            >
+              Visa på Studentbostäder
+              <ExternalLinkIcon />
+            </Button>
+            {lagenhet.planlosningUrl && (
+              <Button
+                render={
+                  <a href={lagenhet.planlosningUrl} target="_blank" rel="noopener noreferrer" />
+                }
+              >
+                Visa planlösning
+                <ExternalLinkIcon />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { fetchLagenheter, type FetchLagenheterOptions } from "./api.js";
+import { fetchLagenheter, fetchPlanlosningUrl, type FetchLagenheterOptions } from "./api.js";
 import type { Lagenhet } from "./schema/lagenhet.js";
 
 export type ScrapeOptions = FetchLagenheterOptions & {
@@ -24,5 +24,16 @@ export async function scrapeLagenheter(options: ScrapeOptions = {}): Promise<Lag
     lagenheter.push(...result.lagenheter);
   }
 
-  return lagenheter;
+  return enrichWithPlanlosning(lagenheter);
+}
+
+async function enrichWithPlanlosning(lagenheter: Lagenhet[]): Promise<Lagenhet[]> {
+  const enriched: Lagenhet[] = [];
+
+  for (const lagenhet of lagenheter) {
+    const planlosningUrl = await fetchPlanlosningUrl(lagenhet.refid);
+    enriched.push({ ...lagenhet, planlosningUrl });
+  }
+
+  return enriched;
 }
