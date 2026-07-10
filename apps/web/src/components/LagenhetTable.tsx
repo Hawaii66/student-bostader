@@ -96,6 +96,14 @@ export function LagenhetTable({
     [visibleLagenheter],
   )
 
+  const typer = useMemo(
+    () =>
+      [...new Set(visibleLagenheter.map((l) => l.typOvergripande))].sort((a, b) =>
+        a.localeCompare(b, 'sv'),
+      ),
+    [visibleLagenheter],
+  )
+
   const columns = useMemo(
     () => [
       columnHelper.display({
@@ -142,6 +150,12 @@ export function LagenhetTable({
         filterFn: inStringList,
         sortingFn: swedishStringSort,
         cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor('typOvergripande', {
+        header: 'Typ',
+        filterFn: inStringList,
+        sortingFn: swedishStringSort,
+        cell: (info) => <span className="whitespace-nowrap">{info.getValue()}</span>,
       }),
       columnHelper.accessor('adress', {
         header: 'Adress',
@@ -254,7 +268,7 @@ export function LagenhetTable({
                   className={header.column.id === 'bild' ? 'w-48 min-w-48 px-4 font-normal' : 'px-4 font-normal'}
                 >
                   {header.column.getCanFilter() ? (
-                    <ColumnFilter column={header.column} omraden={omraden} />
+                    <ColumnFilter column={header.column} omraden={omraden} typer={typer} />
                   ) : null}
                 </TableHead>
               ))}
@@ -339,15 +353,34 @@ function SortableHeader({ column, children }: SortableHeaderProps) {
 type ColumnFilterProps = {
   column: Column<Lagenhet, unknown>
   omraden: string[]
+  typer: string[]
 }
 
-function ColumnFilter({ column, omraden }: ColumnFilterProps) {
+function ColumnFilter({ column, omraden, typer }: ColumnFilterProps) {
   if (!column) return null
 
   const filterValue = column.getFilterValue()
 
   if (column.id === 'omrade') {
-    return <OmradeMultiSelect column={column} omraden={omraden} />
+    return (
+      <StringMultiSelect
+        column={column}
+        options={omraden}
+        allLabel="Alla områden"
+        ariaLabel="Filtrera på område"
+      />
+    )
+  }
+
+  if (column.id === 'typOvergripande') {
+    return (
+      <StringMultiSelect
+        column={column}
+        options={typer}
+        allLabel="Alla typer"
+        ariaLabel="Filtrera på bostadstyp"
+      />
+    )
   }
 
   if (column.id === 'adress') {
@@ -416,25 +449,27 @@ function ColumnFilter({ column, omraden }: ColumnFilterProps) {
   return null
 }
 
-type OmradeMultiSelectProps = {
+type StringMultiSelectProps = {
   column: Column<Lagenhet, unknown>
-  omraden: string[]
+  options: string[]
+  allLabel: string
+  ariaLabel: string
 }
 
-function OmradeMultiSelect({ column, omraden }: OmradeMultiSelectProps) {
+function StringMultiSelect({ column, options, allLabel, ariaLabel }: StringMultiSelectProps) {
   const selected = (column.getFilterValue() as string[] | undefined) ?? []
 
-  const toggle = (omrade: string) => {
-    const next = selected.includes(omrade)
-      ? selected.filter((value) => value !== omrade)
-      : [...selected, omrade]
+  const toggle = (option: string) => {
+    const next = selected.includes(option)
+      ? selected.filter((value) => value !== option)
+      : [...selected, option]
 
     column.setFilterValue(next.length ? next : undefined)
   }
 
   const label =
     selected.length === 0
-      ? 'Alla områden'
+      ? allLabel
       : selected.length === 1
         ? selected[0]
         : `${selected.length} valda`
@@ -447,7 +482,7 @@ function OmradeMultiSelect({ column, omraden }: OmradeMultiSelectProps) {
             type="button"
             variant="outline"
             size="sm"
-            aria-label="Filtrera på område"
+            aria-label={ariaLabel}
             className="w-full min-w-36 justify-between font-normal normal-case"
           />
         }
@@ -457,16 +492,16 @@ function OmradeMultiSelect({ column, omraden }: OmradeMultiSelectProps) {
       </PopoverTrigger>
       <PopoverContent align="start" className="w-56 p-1">
         <div className="max-h-48 overflow-y-auto">
-          {omraden.map((omrade) => (
+          {options.map((option) => (
             <label
-              key={omrade}
+              key={option}
               className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
             >
               <Checkbox
-                checked={selected.includes(omrade)}
-                onCheckedChange={() => toggle(omrade)}
+                checked={selected.includes(option)}
+                onCheckedChange={() => toggle(option)}
               />
-              <span className="truncate text-sm">{omrade}</span>
+              <span className="truncate text-sm">{option}</span>
             </label>
           ))}
         </div>
