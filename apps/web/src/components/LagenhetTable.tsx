@@ -1,15 +1,17 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
+  getSortedRowModel,
   type Column,
   type ColumnFiltersState,
   type FilterFn,
+  type SortingState,
   useReactTable,
 } from '@tanstack/react-table'
-import { ChevronDownIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronDownIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -51,12 +53,16 @@ const inStringList: FilterFn<Lagenhet> = (row, columnId, filterValue) => {
 
 const columnHelper = createColumnHelper<Lagenhet>()
 
+const swedishStringSort = (rowA: { getValue: (id: string) => unknown }, rowB: { getValue: (id: string) => unknown }, columnId: string) =>
+  (rowA.getValue(columnId) as string).localeCompare(rowB.getValue(columnId) as string, 'sv')
+
 type LagenhetTableProps = {
   lagenheter: Lagenhet[]
 }
 
 export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [sorting, setSorting] = useState<SortingState>([])
 
   const omraden = useMemo(
     () => [...new Set(lagenheter.map((l) => l.omrade))].sort((a, b) => a.localeCompare(b, 'sv')),
@@ -79,15 +85,18 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
           </div>
         ),
         enableColumnFilter: false,
+        enableSorting: false,
       }),
       columnHelper.accessor('omrade', {
         header: 'Område',
         filterFn: inStringList,
+        sortingFn: swedishStringSort,
         cell: (info) => <span className="font-medium">{info.getValue()}</span>,
       }),
       columnHelper.accessor('adress', {
         header: 'Adress',
         filterFn: 'includesString',
+        sortingFn: swedishStringSort,
       }),
       columnHelper.accessor('hyra', {
         header: 'Hyra',
@@ -117,10 +126,12 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
   const table = useReactTable({
     data: lagenheter,
     columns,
-    state: { columnFilters },
+    state: { columnFilters, sorting },
     onColumnFiltersChange: setColumnFilters,
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   })
 
   const filteredCount = table.getFilteredRowModel().rows.length
@@ -162,9 +173,13 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
                     key={header.id}
                     className={header.column.id === 'bild' ? 'w-48 min-w-48 px-4' : 'px-4'}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                      <SortableHeader column={header.column}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </SortableHeader>
+                    ) : (
+                      flexRender(header.column.columnDef.header, header.getContext())
+                    )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -207,6 +222,34 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
         </Table>
       </div>
     </div>
+  )
+}
+
+type SortableHeaderProps = {
+  column: Column<Lagenhet, unknown>
+  children: ReactNode
+}
+
+function SortableHeader({ column, children }: SortableHeaderProps) {
+  const sorted = column.getIsSorted()
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="-ml-3 h-8 gap-1 font-medium normal-case"
+      onClick={() => column.toggleSorting()}
+    >
+      {children}
+      {sorted === 'asc' ? (
+        <ArrowUpIcon className="size-4" />
+      ) : sorted === 'desc' ? (
+        <ArrowDownIcon className="size-4" />
+      ) : (
+        <ArrowUpDownIcon className="size-4 text-muted-foreground" />
+      )}
+    </Button>
   )
 }
 
