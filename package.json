@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "pnpm --filter @student-bostader/web dev",
     "build": "pnpm --filter @student-bostader/web build",
-    "scraper": "pnpm --filter @student-bostader/scraper start"
+    "scraper": "pnpm --filter @student-bostader/scraper start",
+    "scraper:save": "pnpm --filter @student-bostader/scraper save"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
