@@ -14,9 +14,6 @@ function Home() {
   return (
     <div className="mx-auto max-w-7xl p-8">
       <h1 className="text-4xl font-bold">Lediga lägenheter</h1>
-      <p className="mt-2 text-gray-600">
-        {lagenheter.length} lägenheter tillgängliga
-      </p>
       <div className="mt-8">
         <LagenhetTable lagenheter={lagenheter} />
       </div>
