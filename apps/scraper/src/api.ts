@@ -65,21 +65,59 @@ function parseJsonp(body: string): unknown {
   return JSON.parse(body.slice(start + 1, end));
 }
 
+const widgetHeaders = {
+  Accept: "text/javascript, application/javascript, */*; q=0.01",
+  "Accept-Language": "en-US,en;q=0.9",
+  Origin: "https://www.studentbostader.se",
+  Referer: "https://www.studentbostader.se/",
+  "X-Requested-With": "XMLHttpRequest",
+  "User-Agent":
+    "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
+} as const;
+
+const objektdokumentResponseSchema = z.object({
+  html: z.object({
+    objektdokument: z.string().optional(),
+  }),
+});
+
+function parsePlanlosningUrl(html: string): string | null {
+  const match = html.match(/href="([^"]*\/spin\/\?[^"]+)"/);
+  if (!match) return null;
+  return match[1].replace(/&amp;/g, "&");
+}
+
+export async function fetchPlanlosningUrl(refid: string): Promise<string | null> {
+  const params = new URLSearchParams({
+    refid,
+    callback: `jQuery${Date.now()}_${Date.now()}`,
+    _: String(Date.now() + 1),
+  });
+  params.append("widgets[]", "objektdokument");
+
+  const response = await fetch(`${BASE_URL}?${params.toString()}`, {
+    headers: widgetHeaders,
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch planlösning for refid ${refid}: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  const body = await response.text();
+  const parsed = objektdokumentResponseSchema.parse(parseJsonp(body));
+  const html = parsed.html.objektdokument ?? "";
+  return parsePlanlosningUrl(html);
+}
+
 export async function fetchLagenheter(
   options: FetchLagenheterOptions = {},
 ): Promise<FetchLagenheterResult> {
   const url = buildWidgetsUrl(options);
 
   const response = await fetch(url, {
-    headers: {
-      Accept: "text/javascript, application/javascript, */*; q=0.01",
-      "Accept-Language": "en-US,en;q=0.9",
-      Origin: "https://www.studentbostader.se",
-      Referer: "https://www.studentbostader.se/",
-      "X-Requested-With": "XMLHttpRequest",
-      "User-Agent":
-        "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
-    },
+    headers: widgetHeaders,
   });
 
   if (!response.ok) {

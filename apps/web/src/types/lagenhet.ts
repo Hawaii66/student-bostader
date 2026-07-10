@@ -35,4 +35,5 @@ export interface Lagenhet {
   bilder: LagenhetBild[]
   publiceratDatum: string
   harIntresseanmaltsAvInloggadKund: boolean
+  planlosningUrl: string | null
 }

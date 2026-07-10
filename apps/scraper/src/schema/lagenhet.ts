@@ -67,6 +67,7 @@ export const lagenhetSchema = z.object({
   bilder: z.array(bildSchema),
   publiceratDatum: z.string(),
   harIntresseanmaltsAvInloggadKund: z.boolean(),
+  planlosningUrl: z.string().nullable(),
 });
 
 export type Lagenhet = z.infer<typeof lagenhetSchema>;
@@ -132,5 +133,6 @@ export function normalizeLagenhet(raw: RawLagenhet): Lagenhet {
     })),
     publiceratDatum: raw.publiceratDatum,
     harIntresseanmaltsAvInloggadKund: raw.harIntresseanmaltsAvInloggadKund,
+    planlosningUrl: null,
   });
 }
