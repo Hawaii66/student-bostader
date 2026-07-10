@@ -9,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { withBildDimensions } from '@/lib/bilder'
 import { cn } from '@/lib/utils'
 import type { Lagenhet } from '#/types/lagenhet'
 
@@ -65,11 +66,10 @@ export function FavoriteLagenheterSheet({
                   aria-label={`Visa detaljer för ${lagenhet.adress}`}
                 >
                   <img
-                    src={lagenhet.bildUrl}
+                    src={withBildDimensions(lagenhet.bildUrl, 224, 160)}
                     alt={lagenhet.adress}
                     className="h-20 w-28 shrink-0 rounded-md object-cover"
                     loading="lazy"
-                    referrerPolicy="no-referrer"
                   />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{lagenhet.omrade}</p>
