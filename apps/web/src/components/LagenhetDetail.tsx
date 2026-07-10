@@ -1,11 +1,13 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowLeftIcon, ExternalLinkIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 import { LagenhetBildGalleri } from '@/components/LagenhetBildGalleri'
 import { LagenhetPlanlosningSheet } from '@/components/LagenhetPlanlosningSheet'
 import { OpenMapsButton } from '@/components/OpenMapsButton'
 import { Button } from '@/components/ui/button'
 import { buildStudentbostaderDetaljUrl } from '@/lib/lagenheter'
+import { loadLagenhetListSearch, type LagenhetListSearch } from '#/lib/lagenhet-filters'
 import type { IntresseStatus } from '#/types/intresse'
 import type { Lagenhet } from '#/types/lagenhet'
 
@@ -18,6 +20,12 @@ type LagenhetDetailProps = {
 }
 
 export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps) {
+  const [listSearch, setListSearch] = useState<LagenhetListSearch>({})
+
+  useEffect(() => {
+    setListSearch(loadLagenhetListSearch() ?? {})
+  }, [])
+
   const bilder =
     lagenhet.bilder.length > 0
       ? lagenhet.bilder
@@ -27,6 +35,7 @@ export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps
     <div className="mx-auto max-w-5xl p-8">
       <Link
         to="/"
+        search={listSearch}
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeftIcon className="size-4" />

@@ -1,15 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router'
+import type { ColumnFiltersState, SortingState } from '@tanstack/react-table'
 import { HeartIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { FavoriteLagenheterSheet } from '#/components/FavoriteLagenheterSheet'
 import { LagenhetTable } from '#/components/LagenhetTable'
 import { Button } from '@/components/ui/button'
 import { useFavoriteLagenheter } from '#/hooks/useFavoriteLagenheter'
+import {
+  isEmptyLagenhetListSearch,
+  lagenhetListSearchToTableState,
+  loadLagenhetListSearch,
+  parseLagenhetListSearch,
+  saveLagenhetListSearch,
+  tableStateToLagenhetListSearch,
+} from '#/lib/lagenhet-filters'
 import { getLagenheter } from '#/lib/lagenheter'
 import { pageTitle, site } from '#/lib/site'
 
 export const Route = createFileRoute('/')({
+  validateSearch: parseLagenhetListSearch,
   loader: () => getLagenheter(),
   head: () => ({
     meta: [
@@ -27,9 +37,46 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const lagenheter = Route.useLoaderData()
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false)
+  const restoredFilters = useRef(false)
   const { favorites, isFavorite, toggleFavorite } = useFavoriteLagenheter()
+
+  const { columnFilters, sorting, showOnlyFavorites } = useMemo(
+    () => lagenhetListSearchToTableState(search),
+    [search],
+  )
+
+  useEffect(() => {
+    if (restoredFilters.current) return
+    restoredFilters.current = true
+
+    if (!isEmptyLagenhetListSearch(search)) {
+      saveLagenhetListSearch(search)
+      return
+    }
+
+    const stored = loadLagenhetListSearch()
+    if (!stored) return
+
+    navigate({ search: stored, replace: true })
+  }, [navigate, search])
+
+  const updateTableState = (
+    nextColumnFilters: ColumnFiltersState,
+    nextSorting: SortingState,
+    nextShowOnlyFavorites: boolean,
+  ) => {
+    const nextSearch = tableStateToLagenhetListSearch(
+      nextColumnFilters,
+      nextSorting,
+      nextShowOnlyFavorites,
+    )
+
+    saveLagenhetListSearch(nextSearch)
+    navigate({ search: nextSearch, replace: true })
+  }
 
   return (
     <div className="mx-auto max-w-7xl p-8">
@@ -48,8 +95,18 @@ function Home() {
           lagenheter={lagenheter}
           isFavorite={isFavorite}
           onToggleFavorite={toggleFavorite}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={(nextColumnFilters) =>
+            updateTableState(nextColumnFilters, sorting, showOnlyFavorites)
+          }
+          sorting={sorting}
+          onSortingChange={(nextSorting) =>
+            updateTableState(columnFilters, nextSorting, showOnlyFavorites)
+          }
           showOnlyFavorites={showOnlyFavorites}
-          onShowOnlyFavoritesChange={setShowOnlyFavorites}
+          onShowOnlyFavoritesChange={(nextShowOnlyFavorites) =>
+            updateTableState(columnFilters, sorting, nextShowOnlyFavorites)
+          }
         />
       </div>
       <FavoriteLagenheterSheet
@@ -58,7 +115,7 @@ function Home() {
         favorites={favorites}
         onToggleFavorite={toggleFavorite}
         onShowInTable={() => {
-          setShowOnlyFavorites(true)
+          updateTableState(columnFilters, sorting, true)
           setSheetOpen(false)
         }}
       />

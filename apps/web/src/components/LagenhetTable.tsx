@@ -16,7 +16,6 @@ import {
   ArrowDownIcon,
   ArrowUpDownIcon,
   ArrowUpIcon,
-  ChevronDownIcon,
   HeartIcon,
   ListFilterIcon,
 } from 'lucide-react'
@@ -32,7 +31,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Table,
   TableBody,
@@ -76,6 +74,10 @@ type LagenhetTableProps = {
   lagenheter: Lagenhet[]
   isFavorite: (objektNr: string) => boolean
   onToggleFavorite: (lagenhet: Lagenhet) => void
+  columnFilters: ColumnFiltersState
+  onColumnFiltersChange: (filters: ColumnFiltersState) => void
+  sorting: SortingState
+  onSortingChange: (sorting: SortingState) => void
   showOnlyFavorites?: boolean
   onShowOnlyFavoritesChange?: (value: boolean) => void
 }
@@ -84,11 +86,13 @@ export function LagenhetTable({
   lagenheter,
   isFavorite,
   onToggleFavorite,
+  columnFilters,
+  onColumnFiltersChange,
+  sorting,
+  onSortingChange,
   showOnlyFavorites = false,
   onShowOnlyFavoritesChange,
 }: LagenhetTableProps) {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [sorting, setSorting] = useState<SortingState>([])
   const [filterDialogOpen, setFilterDialogOpen] = useState(false)
 
   const visibleLagenheter = useMemo(
@@ -200,8 +204,14 @@ export function LagenhetTable({
     data: visibleLagenheter,
     columns,
     state: { columnFilters, sorting },
-    onColumnFiltersChange: setColumnFilters,
-    onSortingChange: setSorting,
+    onColumnFiltersChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(columnFilters) : updater
+      onColumnFiltersChange(next)
+    },
+    onSortingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(sorting) : updater
+      onSortingChange(next)
+    },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -222,7 +232,7 @@ export function LagenhetTable({
     })
 
   const clearFilters = () => {
-    setColumnFilters([])
+    onColumnFiltersChange([])
     onShowOnlyFavoritesChange?.(false)
   }
 
@@ -263,34 +273,16 @@ export function LagenhetTable({
         </div>
       </div>
 
-      <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Filter</DialogTitle>
-            <DialogDescription>Filtrera listan efter dina önskemål.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-2">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanFilter())
-              .map((column) => (
-                <FilterField key={column.id} label={filterLabels[column.id] ?? column.id}>
-                  <ColumnFilter column={column} omraden={omraden} typer={typer} />
-                </FilterField>
-              ))}
-          </div>
-          <div className="flex justify-end gap-2">
-            {hasActiveFilters && (
-              <Button type="button" variant="outline" onClick={clearFilters}>
-                Rensa
-              </Button>
-            )}
-            <Button type="button" onClick={() => setFilterDialogOpen(false)}>
-              Visa resultat
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <LagenhetFilterDialog
+        open={filterDialogOpen}
+        onOpenChange={setFilterDialogOpen}
+        table={table}
+        omraden={omraden}
+        typer={typer}
+        filteredCount={filteredCount}
+        hasActiveFilters={hasActiveFilters}
+        onClearFilters={clearFilters}
+      />
 
       <div className="rounded-lg border">
         <Table>
@@ -371,6 +363,59 @@ const filterLabels: Record<string, string> = {
   poang: 'Max poäng just nu',
 }
 
+type LagenhetFilterDialogProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  table: ReturnType<typeof useReactTable<Lagenhet>>
+  omraden: string[]
+  typer: string[]
+  filteredCount: number
+  hasActiveFilters: boolean
+  onClearFilters: () => void
+}
+
+function LagenhetFilterDialog({
+  open,
+  onOpenChange,
+  table,
+  omraden,
+  typer,
+  filteredCount,
+  hasActiveFilters,
+  onClearFilters,
+}: LagenhetFilterDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[calc(100vh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+        <DialogHeader className="px-6 pt-6">
+          <DialogTitle>Filter</DialogTitle>
+          <DialogDescription>Filtrera listan efter dina önskemål.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 overflow-y-auto px-6 py-4">
+          {table
+            .getAllColumns()
+            .filter((column) => column.getCanFilter())
+            .map((column) => (
+              <FilterField key={column.id} label={filterLabels[column.id] ?? column.id}>
+                <ColumnFilter column={column} omraden={omraden} typer={typer} />
+              </FilterField>
+            ))}
+        </div>
+        <div className="flex justify-end gap-2 border-t px-6 py-4">
+          {hasActiveFilters && (
+            <Button type="button" variant="outline" onClick={onClearFilters}>
+              Rensa
+            </Button>
+          )}
+          <Button type="button" onClick={() => onOpenChange(false)}>
+            Visa {filteredCount} resultat
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 type FilterFieldProps = {
   label: string
   children: ReactNode
@@ -429,7 +474,6 @@ function ColumnFilter({ column, omraden, typer }: ColumnFilterProps) {
       <StringMultiSelect
         column={column}
         options={omraden}
-        allLabel="Alla områden"
         ariaLabel="Filtrera på område"
       />
     )
@@ -440,7 +484,6 @@ function ColumnFilter({ column, omraden, typer }: ColumnFilterProps) {
       <StringMultiSelect
         column={column}
         options={typer}
-        allLabel="Alla typer"
         ariaLabel="Filtrera på bostadstyp"
       />
     )
@@ -515,11 +558,10 @@ function ColumnFilter({ column, omraden, typer }: ColumnFilterProps) {
 type StringMultiSelectProps = {
   column: Column<Lagenhet, unknown>
   options: string[]
-  allLabel: string
   ariaLabel: string
 }
 
-function StringMultiSelect({ column, options, allLabel, ariaLabel }: StringMultiSelectProps) {
+function StringMultiSelect({ column, options, ariaLabel }: StringMultiSelectProps) {
   const selected = (column.getFilterValue() as string[] | undefined) ?? []
 
   const toggle = (option: string) => {
@@ -530,45 +572,24 @@ function StringMultiSelect({ column, options, allLabel, ariaLabel }: StringMulti
     column.setFilterValue(next.length ? next : undefined)
   }
 
-  const label =
-    selected.length === 0
-      ? allLabel
-      : selected.length === 1
-        ? selected[0]
-        : `${selected.length} valda`
-
   return (
-    <Popover>
-      <PopoverTrigger
-        render={
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-label={ariaLabel}
-            className="w-full min-w-36 justify-between font-normal normal-case"
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      className="max-h-40 space-y-1 overflow-y-auto rounded-md border p-2"
+    >
+      {options.map((option) => (
+        <label
+          key={option}
+          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
+        >
+          <Checkbox
+            checked={selected.includes(option)}
+            onCheckedChange={() => toggle(option)}
           />
-        }
-      >
-        <span className="truncate">{label}</span>
-        <ChevronDownIcon className="text-muted-foreground" />
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-56 p-1">
-        <div className="max-h-48 overflow-y-auto">
-          {options.map((option) => (
-            <label
-              key={option}
-              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
-            >
-              <Checkbox
-                checked={selected.includes(option)}
-                onCheckedChange={() => toggle(option)}
-              />
-              <span className="truncate text-sm">{option}</span>
-            </label>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
+          <span className="truncate text-sm">{option}</span>
+        </label>
+      ))}
+    </div>
   )
 }
