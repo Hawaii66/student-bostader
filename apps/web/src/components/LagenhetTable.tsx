@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   createColumnHelper,
   flexRender,
@@ -9,7 +9,20 @@ import {
   type FilterFn,
   useReactTable,
 } from '@tanstack/react-table'
+import { ChevronDownIcon } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import type { Lagenhet } from '#/types/lagenhet'
 
 const numberFormatter = new Intl.NumberFormat('sv-SE')
@@ -58,7 +71,7 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
           <img
             src={row.original.bildUrl}
             alt={row.original.adress}
-            className="h-20 w-28 rounded object-cover"
+            className="h-20 w-28 rounded-md object-cover"
             loading="lazy"
             referrerPolicy="no-referrer"
           />
@@ -68,18 +81,17 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
       columnHelper.accessor('omrade', {
         header: 'Område',
         filterFn: inStringList,
-        cell: (info) => <span className="font-medium text-gray-900">{info.getValue()}</span>,
+        cell: (info) => <span className="font-medium">{info.getValue()}</span>,
       }),
       columnHelper.accessor('adress', {
         header: 'Adress',
         filterFn: 'includesString',
-        cell: (info) => <span className="text-gray-900">{info.getValue()}</span>,
       }),
       columnHelper.accessor('hyra', {
         header: 'Hyra',
         filterFn: inNumberRange,
         cell: ({ row }) => (
-          <span className="whitespace-nowrap text-gray-900">
+          <span className="whitespace-nowrap">
             {numberFormatter.format(row.original.hyra)} {row.original.hyraEnhet}
           </span>
         ),
@@ -87,17 +99,13 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
       columnHelper.accessor('yta', {
         header: 'Storlek',
         filterFn: inNumberRange,
-        cell: (info) => (
-          <span className="whitespace-nowrap text-gray-900">{info.getValue()} m²</span>
-        ),
+        cell: (info) => <span className="whitespace-nowrap">{info.getValue()} m²</span>,
       }),
       columnHelper.accessor('poang', {
         header: 'Max poäng just nu',
         filterFn: inNumberRange,
         cell: (info) => (
-          <span className="whitespace-nowrap text-gray-900">
-            {numberFormatter.format(info.getValue())} p
-          </span>
+          <span className="whitespace-nowrap">{numberFormatter.format(info.getValue())} p</span>
         ),
       }),
     ],
@@ -126,70 +134,66 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
   })
 
   if (lagenheter.length === 0) {
-    return <p className="text-gray-500">Inga lägenheter hittades.</p>
+    return <p className="text-muted-foreground">Inga lägenheter hittades.</p>
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-gray-600">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
         <p>
           Visar {filteredCount} av {lagenheter.length} lägenheter
         </p>
         {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={() => setColumnFilters([])}
-            className="text-blue-600 hover:text-blue-800 hover:underline"
-          >
+          <Button type="button" variant="link" size="sm" onClick={() => setColumnFilters([])}>
             Rensa filter
-          </button>
+          </Button>
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="w-full border-collapse text-left text-sm">
-          <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-4 py-3 font-medium">
+                  <TableHead key={header.id} className="px-4">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-            <tr className="border-t border-gray-200 normal-case tracking-normal">
+            <TableRow className="hover:bg-transparent">
               {table.getHeaderGroups()[0]?.headers.map((header) => (
-                <th key={`${header.id}-filter`} className="px-4 py-2 font-normal">
+                <TableHead key={`${header.id}-filter`} className="px-4 font-normal">
                   {header.column.getCanFilter() ? (
                     <ColumnFilter column={header.column} omraden={omraden} />
                   ) : null}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={columns.length} className="px-4 py-8 text-center text-muted-foreground">
                   Inga lägenheter matchar filtren.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.original.objektNr} className="hover:bg-gray-50">
+                <TableRow key={row.original.objektNr}>
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3">
+                    <TableCell key={cell.id} className="px-4 py-3">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   )
@@ -211,13 +215,13 @@ function ColumnFilter({ column, omraden }: ColumnFilterProps) {
 
   if (column.id === 'adress') {
     return (
-      <input
+      <Input
         type="search"
         aria-label="Filtrera på adress"
         placeholder="Sök adress..."
         value={(filterValue as string) ?? ''}
         onChange={(e) => column.setFilterValue(e.target.value || undefined)}
-        className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm text-gray-900 normal-case placeholder:text-gray-400"
+        className="normal-case"
       />
     )
   }
@@ -250,23 +254,23 @@ function ColumnFilter({ column, omraden }: ColumnFilterProps) {
 
     return (
       <div className="flex gap-1">
-        <input
+        <Input
           type="number"
           aria-label={label.min}
           placeholder={label.min}
           value={range.min ?? ''}
           min={0}
           onChange={(e) => updateRange('min', e.target.value)}
-          className="w-full min-w-0 rounded border border-gray-300 px-2 py-1.5 text-sm text-gray-900 normal-case placeholder:text-gray-400"
+          className="min-w-0 normal-case"
         />
-        <input
+        <Input
           type="number"
           aria-label={label.max}
           placeholder={label.max}
           value={range.max ?? ''}
           min={0}
           onChange={(e) => updateRange('max', e.target.value)}
-          className="w-full min-w-0 rounded border border-gray-300 px-2 py-1.5 text-sm text-gray-900 normal-case placeholder:text-gray-400"
+          className="min-w-0 normal-case"
         />
       </div>
     )
@@ -281,22 +285,7 @@ type OmradeMultiSelectProps = {
 }
 
 function OmradeMultiSelect({ column, omraden }: OmradeMultiSelectProps) {
-  const [open, setOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
   const selected = (column.getFilterValue() as string[] | undefined) ?? []
-
-  useEffect(() => {
-    if (!open) return
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
 
   const toggle = (omrade: string) => {
     const next = selected.includes(omrade)
@@ -314,36 +303,37 @@ function OmradeMultiSelect({ column, omraden }: OmradeMultiSelectProps) {
         : `${selected.length} valda`
 
   return (
-    <div ref={containerRef} className="relative min-w-36">
-      <button
-        type="button"
-        aria-label="Filtrera på område"
-        aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-2 rounded border border-gray-300 bg-white px-2 py-1.5 text-left text-sm text-gray-900 normal-case"
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            aria-label="Filtrera på område"
+            className="w-full min-w-36 justify-between font-normal normal-case"
+          />
+        }
       >
         <span className="truncate">{label}</span>
-        <span className="text-gray-400">{open ? '▴' : '▾'}</span>
-      </button>
-
-      {open && (
-        <div className="absolute z-10 mt-1 max-h-48 w-full min-w-48 overflow-y-auto rounded border border-gray-200 bg-white py-1 shadow-lg">
+        <ChevronDownIcon className="text-muted-foreground" />
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-56 p-1">
+        <div className="max-h-48 overflow-y-auto">
           {omraden.map((omrade) => (
             <label
               key={omrade}
-              className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm text-gray-900 hover:bg-gray-50"
+              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted"
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={selected.includes(omrade)}
-                onChange={() => toggle(omrade)}
-                className="rounded border-gray-300"
+                onCheckedChange={() => toggle(omrade)}
               />
-              <span className="truncate">{omrade}</span>
+              <span className="truncate text-sm">{omrade}</span>
             </label>
           ))}
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   )
 }
