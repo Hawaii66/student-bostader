@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowLeftIcon, ExternalLinkIcon } from 'lucide-react'
 
 import { LagenhetBildGalleri } from '@/components/LagenhetBildGalleri'
+import { LagenhetPlanlosningSheet } from '@/components/LagenhetPlanlosningSheet'
 import { Button } from '@/components/ui/button'
 import { buildStudentbostaderDetaljUrl } from '@/lib/lagenheter'
 import type { IntresseStatus } from '#/types/intresse'
@@ -68,6 +69,27 @@ export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps
             <DetailItem label="Objektnr">{lagenhet.objektNr}</DetailItem>
           </dl>
 
+          <div className="flex flex-wrap gap-2">
+            <Button
+              render={
+                <a
+                  href={buildStudentbostaderDetaljUrl(lagenhet.refid)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
+            >
+              Visa på Studentbostäder
+              <ExternalLinkIcon />
+            </Button>
+            {lagenhet.planlosningUrl && (
+              <LagenhetPlanlosningSheet
+                planlosningUrl={lagenhet.planlosningUrl}
+                adress={lagenhet.adress}
+              />
+            )}
+          </div>
+
           {intresseStatus && intresseStatus.topPoang.length > 0 && (
             <section>
               <h2 className="text-lg font-semibold">Topp 5 köpoäng</h2>
@@ -123,31 +145,6 @@ export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps
               </ul>
             </section>
           )}
-
-          <div className="flex flex-wrap gap-2">
-            <Button
-              render={
-                <a
-                  href={buildStudentbostaderDetaljUrl(lagenhet.refid)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-            >
-              Visa på Studentbostäder
-              <ExternalLinkIcon />
-            </Button>
-            {lagenhet.planlosningUrl && (
-              <Button
-                render={
-                  <a href={lagenhet.planlosningUrl} target="_blank" rel="noopener noreferrer" />
-                }
-              >
-                Visa planlösning
-                <ExternalLinkIcon />
-              </Button>
-            )}
-          </div>
         </div>
       </div>
     </div>
