@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import {
   createColumnHelper,
   flexRender,
@@ -183,10 +184,20 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
               </TableRow>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.original.objektNr}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                <TableRow key={row.original.objektNr} className="hover:bg-muted/50">
+                  {row.getVisibleCells().map((cell, index) => (
+                    <TableCell key={cell.id} className="p-0">
+                      <Link
+                        to="/lagenhet/$objektNr"
+                        params={{ objektNr: row.original.objektNr }}
+                        className="block px-4 py-3 text-inherit no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        aria-label={
+                          index === 0 ? `Visa detaljer för ${row.original.adress}` : undefined
+                        }
+                        tabIndex={index === 0 ? 0 : -1}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </Link>
                     </TableCell>
                   ))}
                 </TableRow>
