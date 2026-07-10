@@ -12,9 +12,16 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table'
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronDownIcon } from 'lucide-react'
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  ChevronDownIcon,
+  HeartIcon,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -59,9 +66,11 @@ const swedishStringSort = (rowA: { getValue: (id: string) => unknown }, rowB: { 
 
 type LagenhetTableProps = {
   lagenheter: Lagenhet[]
+  isFavorite: (objektNr: string) => boolean
+  onToggleFavorite: (lagenhet: Lagenhet) => void
 }
 
-export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
+export function LagenhetTable({ lagenheter, isFavorite, onToggleFavorite }: LagenhetTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
 
@@ -72,6 +81,29 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
 
   const columns = useMemo(
     () => [
+      columnHelper.display({
+        id: 'favorite',
+        header: '',
+        cell: ({ row }) => {
+          const favorited = isFavorite(row.original.objektNr)
+
+          return (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={favorited ? 'Ta bort från sparade' : 'Spara lägenhet'}
+              aria-pressed={favorited}
+              onClick={() => onToggleFavorite(row.original)}
+            >
+              <HeartIcon
+                className={cn(favorited && 'fill-red-500 text-red-500')}
+              />
+            </Button>
+          )
+        },
+        enableColumnFilter: false,
+      }),
       columnHelper.display({
         id: 'bild',
         header: 'Bild',
@@ -121,7 +153,7 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
         ),
       }),
     ],
-    [],
+    [isFavorite, onToggleFavorite],
   )
 
   const table = useReactTable({
@@ -208,24 +240,34 @@ export function LagenhetTable({ lagenheter }: LagenhetTableProps) {
             ) : (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.original.objektNr} className="hover:bg-muted/50">
-                  {row.getVisibleCells().map((cell, index) => (
-                    <TableCell
-                      key={cell.id}
-                      className={cell.column.id === 'bild' ? 'w-48 min-w-48 p-0' : 'p-0'}
-                    >
-                      <Link
-                        to="/lagenhet/$objektNr"
-                        params={{ objektNr: row.original.objektNr }}
-                        className="block px-4 py-3 text-inherit no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        aria-label={
-                          index === 0 ? `Visa detaljer för ${row.original.adress}` : undefined
-                        }
-                        tabIndex={index === 0 ? 0 : -1}
+                  {row.getVisibleCells().map((cell) => {
+                    const content = flexRender(cell.column.columnDef.cell, cell.getContext())
+
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cell.column.id === 'bild' ? 'w-48 min-w-48 p-0' : 'p-0'}
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </Link>
-                    </TableCell>
-                  ))}
+                        {cell.column.id === 'favorite' ? (
+                          <div className="px-4 py-3">{content}</div>
+                        ) : (
+                          <Link
+                            to="/lagenhet/$objektNr"
+                            params={{ objektNr: row.original.objektNr }}
+                            className="block px-4 py-3 text-inherit no-underline outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            aria-label={
+                              cell.column.id === 'bild'
+                                ? `Visa detaljer för ${row.original.adress}`
+                                : undefined
+                            }
+                            tabIndex={cell.column.id === 'bild' ? 0 : -1}
+                          >
+                            {content}
+                          </Link>
+                        )}
+                      </TableCell>
+                    )
+                  })}
                 </TableRow>
               ))
             )}
