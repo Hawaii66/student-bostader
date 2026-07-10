@@ -3,6 +3,7 @@ import { createFileRoute, notFound } from '@tanstack/react-router'
 import { LagenhetDetail } from '#/components/LagenhetDetail'
 import { getIntresseStatus } from '#/lib/intresse'
 import { getLagenhet } from '#/lib/lagenheter'
+import { pageTitle } from '#/lib/site'
 
 export const Route = createFileRoute('/lagenhet/$objektNr')({
   loader: async ({ params }) => {
@@ -14,6 +15,21 @@ export const Route = createFileRoute('/lagenhet/$objektNr')({
     )
 
     return { lagenhet, intresseStatus }
+  },
+  head: ({ loaderData }) => {
+    const { lagenhet } = loaderData
+
+    return {
+      meta: [
+        {
+          title: pageTitle(lagenhet.adress),
+        },
+        {
+          name: 'description',
+          content: `${lagenhet.adress} i ${lagenhet.omrade}. ${lagenhet.yta} m², ${lagenhet.hyra} ${lagenhet.hyraEnhet}.`,
+        },
+      ],
+    }
   },
   component: LagenhetDetailPage,
 })

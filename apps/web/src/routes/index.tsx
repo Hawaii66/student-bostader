@@ -7,9 +7,21 @@ import { LagenhetTable } from '#/components/LagenhetTable'
 import { Button } from '@/components/ui/button'
 import { useFavoriteLagenheter } from '#/hooks/useFavoriteLagenheter'
 import { getLagenheter } from '#/lib/lagenheter'
+import { pageTitle, site } from '#/lib/site'
 
 export const Route = createFileRoute('/')({
   loader: () => getLagenheter(),
+  head: () => ({
+    meta: [
+      {
+        title: pageTitle('Lediga lägenheter'),
+      },
+      {
+        name: 'description',
+        content: site.description,
+      },
+    ],
+  }),
   component: Home,
 })
 
