@@ -7,7 +7,7 @@ import { pageTitle } from '#/lib/site'
 
 export const Route = createFileRoute('/lagenhet/$objektNr')({
   loader: async ({ params }) => {
-    const lagenhet = await getLagenhet({ data: params.objektNr })
+    const lagenhet = await getLagenhet(params.objektNr)
     if (!lagenhet) throw notFound()
 
     const intresseStatus = await getIntresseStatus({ data: lagenhet.refid }).catch(
