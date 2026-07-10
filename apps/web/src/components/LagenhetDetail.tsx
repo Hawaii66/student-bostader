@@ -3,6 +3,7 @@ import { ArrowLeftIcon, ExternalLinkIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { withBildDimensions } from '@/lib/bilder'
+import type { IntresseStatus } from '#/types/intresse'
 import type { Lagenhet } from '#/types/lagenhet'
 
 const numberFormatter = new Intl.NumberFormat('sv-SE')
@@ -10,9 +11,10 @@ const dateFormatter = new Intl.DateTimeFormat('sv-SE', { dateStyle: 'long' })
 
 type LagenhetDetailProps = {
   lagenhet: Lagenhet
+  intresseStatus: IntresseStatus | null
 }
 
-export function LagenhetDetail({ lagenhet }: LagenhetDetailProps) {
+export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps) {
   const bilder =
     lagenhet.bilder.length > 0
       ? lagenhet.bilder
@@ -87,6 +89,29 @@ export function LagenhetDetail({ lagenhet }: LagenhetDetailProps) {
             </DetailItem>
             <DetailItem label="Objektnr">{lagenhet.objektNr}</DetailItem>
           </dl>
+
+          {intresseStatus && intresseStatus.topPoang.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold">Topp 5 köpoäng</h2>
+              {intresseStatus.antalIntresseanmalningar !== null && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {numberFormatter.format(intresseStatus.antalIntresseanmalningar)} personer har
+                  anmält intresse
+                </p>
+              )}
+              <ol className="mt-3 space-y-2">
+                {intresseStatus.topPoang.map((poang, index) => (
+                  <li
+                    key={`${index}-${poang}`}
+                    className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm"
+                  >
+                    <span className="text-muted-foreground">{index + 1}.</span>
+                    <span className="font-medium">{numberFormatter.format(poang)} p</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
 
           {lagenhet.beskrivning && (
             <section>
