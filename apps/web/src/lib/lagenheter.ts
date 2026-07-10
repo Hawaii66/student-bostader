@@ -5,10 +5,19 @@ import { createServerFn } from '@tanstack/react-start'
 
 import type { Lagenhet } from '#/types/lagenhet'
 
+async function loadLagenheter(): Promise<Lagenhet[]> {
+  const filePath = join(process.cwd(), 'public/lagenheter.json')
+  const raw = await readFile(filePath, 'utf-8')
+  return JSON.parse(raw) as Lagenhet[]
+}
+
 export const getLagenheter = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<Lagenhet[]> => {
-    const filePath = join(process.cwd(), 'public/lagenheter.json')
-    const raw = await readFile(filePath, 'utf-8')
-    return JSON.parse(raw) as Lagenhet[]
-  },
+  async (): Promise<Lagenhet[]> => loadLagenheter(),
 )
+
+export const getLagenhet = createServerFn({ method: 'GET' })
+  .inputValidator((objektNr: string) => objektNr)
+  .handler(async ({ data: objektNr }): Promise<Lagenhet | null> => {
+    const lagenheter = await loadLagenheter()
+    return lagenheter.find((lagenhet) => lagenhet.objektNr === objektNr) ?? null
+  })
