@@ -21,6 +21,7 @@ type FavoriteLagenheterSheetProps = {
   favorites: Lagenhet[]
   onToggleFavorite: (lagenhet: Lagenhet) => void
   onShowInTable: () => void
+  onNavigateToDetail?: () => void
 }
 
 export function FavoriteLagenheterSheet({
@@ -29,6 +30,7 @@ export function FavoriteLagenheterSheet({
   favorites,
   onToggleFavorite,
   onShowInTable,
+  onNavigateToDetail,
 }: FavoriteLagenheterSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -61,7 +63,10 @@ export function FavoriteLagenheterSheet({
                 <Link
                   to="/lagenhet/$objektNr"
                   params={{ objektNr: lagenhet.objektNr }}
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => {
+                    onNavigateToDetail?.()
+                    onOpenChange(false)
+                  }}
                   className="flex min-w-0 flex-1 gap-3 rounded-md text-inherit no-underline outline-none transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   aria-label={`Visa detaljer för ${lagenhet.adress}`}
                 >

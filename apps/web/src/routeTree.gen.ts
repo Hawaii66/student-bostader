@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as KonkurrensRouteImport } from './routes/konkurrens'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LagenhetObjektNrRouteImport } from './routes/lagenhet/$objektNr'
 
+const KonkurrensRoute = KonkurrensRouteImport.update({
+  id: '/konkurrens',
+  path: '/konkurrens',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -25,32 +31,43 @@ const LagenhetObjektNrRoute = LagenhetObjektNrRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/konkurrens': typeof KonkurrensRoute
   '/lagenhet/$objektNr': typeof LagenhetObjektNrRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/konkurrens': typeof KonkurrensRoute
   '/lagenhet/$objektNr': typeof LagenhetObjektNrRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/konkurrens': typeof KonkurrensRoute
   '/lagenhet/$objektNr': typeof LagenhetObjektNrRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lagenhet/$objektNr'
+  fullPaths: '/' | '/konkurrens' | '/lagenhet/$objektNr'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lagenhet/$objektNr'
-  id: '__root__' | '/' | '/lagenhet/$objektNr'
+  to: '/' | '/konkurrens' | '/lagenhet/$objektNr'
+  id: '__root__' | '/' | '/konkurrens' | '/lagenhet/$objektNr'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  KonkurrensRoute: typeof KonkurrensRoute
   LagenhetObjektNrRoute: typeof LagenhetObjektNrRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/konkurrens': {
+      id: '/konkurrens'
+      path: '/konkurrens'
+      fullPath: '/konkurrens'
+      preLoaderRoute: typeof KonkurrensRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  KonkurrensRoute: KonkurrensRoute,
   LagenhetObjektNrRoute: LagenhetObjektNrRoute,
 }
 export const routeTree = rootRouteImport
