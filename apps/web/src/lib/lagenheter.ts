@@ -37,8 +37,11 @@ const loadLagenheter = createIsomorphicFn()
   })
   .server(async (): Promise<Lagenhet[]> => {
     const { readFile } = await import('node:fs/promises')
-    const { join } = await import('node:path')
-    const raw = await readFile(join(process.cwd(), 'public/lagenheter.json'), 'utf-8')
+    const { fileURLToPath } = await import('node:url')
+    const raw = await readFile(
+      fileURLToPath(new URL('../../public/lagenheter.json', import.meta.url)),
+      'utf-8',
+    )
     return JSON.parse(raw) as Lagenhet[]
   })
 
