@@ -20,6 +20,7 @@ import {
   ListFilterIcon,
 } from 'lucide-react'
 
+import { LagenhetPlanlosningSheet } from '#/components/LagenhetPlanlosningSheet'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -128,18 +129,27 @@ export function LagenhetTable({
           const favorited = isFavorite(row.original.objektNr)
 
           return (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label={favorited ? 'Ta bort från sparade' : 'Spara lägenhet'}
-              aria-pressed={favorited}
-              onClick={() => onToggleFavorite(row.original)}
-            >
-              <HeartIcon
-                className={cn(favorited && 'fill-red-500 text-red-500')}
-              />
-            </Button>
+            <div className="flex flex-col items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={favorited ? 'Ta bort från sparade' : 'Spara lägenhet'}
+                aria-pressed={favorited}
+                onClick={() => onToggleFavorite(row.original)}
+              >
+                <HeartIcon
+                  className={cn(favorited && 'fill-red-500 text-red-500')}
+                />
+              </Button>
+              {row.original.planlosningUrl && (
+                <LagenhetPlanlosningSheet
+                  planlosningUrl={row.original.planlosningUrl}
+                  adress={row.original.adress}
+                  compact
+                />
+              )}
+            </div>
           )
         },
         enableColumnFilter: false,

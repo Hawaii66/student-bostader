@@ -14,20 +14,34 @@ import {
 type LagenhetPlanlosningSheetProps = {
   planlosningUrl: string
   adress: string
+  compact?: boolean
 }
 
 export function LagenhetPlanlosningSheet({
   planlosningUrl,
   adress,
+  compact = false,
 }: LagenhetPlanlosningSheetProps) {
   const [open, setOpen] = useState(false)
 
   return (
     <>
-      <Button type="button" onClick={() => setOpen(true)}>
-        Visa planlösning
-        <FileTextIcon />
-      </Button>
+      {compact ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Visa planlösning"
+          onClick={() => setOpen(true)}
+        >
+          <FileTextIcon />
+        </Button>
+      ) : (
+        <Button type="button" onClick={() => setOpen(true)}>
+          Visa planlösning
+          <FileTextIcon />
+        </Button>
+      )}
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="flex h-full flex-col gap-0 p-0 data-[side=right]:w-[75vw] data-[side=right]:max-w-[75vw] data-[side=right]:sm:max-w-[75vw]">
