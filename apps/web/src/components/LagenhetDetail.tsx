@@ -27,6 +27,7 @@ type LagenhetDetailProps = {
 type BackTarget =
   | { to: '/'; search: LagenhetListSearch; label: string }
   | { to: '/konkurrens'; search: KonkurrensSearch; label: string }
+  | { to: '/playoff'; search: Record<string, never>; label: string }
 
 export function LagenhetDetail({ lagenhet, intresseStatus }: LagenhetDetailProps) {
   const [backTarget, setBackTarget] = useState<BackTarget>({
