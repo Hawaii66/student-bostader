@@ -26,6 +26,13 @@ export function SiteHeader() {
           >
             Konkurrens
           </Link>
+          <Link
+            to="/playoff"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+            activeProps={{ className: 'font-medium text-foreground' }}
+          >
+            Playoff
+          </Link>
         </nav>
       </div>
     </header>

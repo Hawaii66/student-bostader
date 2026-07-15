@@ -6,6 +6,7 @@ import { parseKonkurrensSearch, type KonkurrensSearch } from '#/lib/konkurrens-s
 
 export type DetailReturn =
   | { to: '/konkurrens'; search: KonkurrensSearch }
+  | { to: '/playoff'; search: Record<string, never> }
   | { to: '/'; search: LagenhetListSearch }
 
 const DETAIL_RETURN_KEY = 'lagenhet-detail-return'
@@ -23,6 +24,10 @@ export function saveKonkurrensDetailReturn(search: KonkurrensSearch): void {
   saveDetailReturn({ to: '/konkurrens', search })
 }
 
+export function savePlayoffDetailReturn(): void {
+  saveDetailReturn({ to: '/playoff', search: {} })
+}
+
 export function loadDetailReturn(): DetailReturn | null {
   if (typeof window === 'undefined') return null
 
@@ -36,6 +41,10 @@ export function loadDetailReturn(): DetailReturn | null {
         to: '/konkurrens',
         search: parseKonkurrensSearch((parsed.search ?? {}) as Record<string, unknown>),
       }
+    }
+
+    if (parsed.to === '/playoff') {
+      return { to: '/playoff', search: {} }
     }
 
     if (parsed.to === '/') {
@@ -54,5 +63,6 @@ export function loadDetailReturn(): DetailReturn | null {
 
 export function getDetailBackLabel(to: DetailReturn['to']): string {
   if (to === '/konkurrens') return 'Tillbaka till konkurrens'
+  if (to === '/playoff') return 'Tillbaka till playoff'
   return 'Tillbaka till lediga lägenheter'
 }

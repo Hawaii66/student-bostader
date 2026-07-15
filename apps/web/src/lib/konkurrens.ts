@@ -131,7 +131,7 @@ export function userBeatsAllCompetitors(
   return userPoang > Math.max(...realTopPoang)
 }
 
-function buildVirtualUsers(
+export function buildVirtualUsers(
   lagenheter: Lagenhet[],
   intresseIndex: Record<string, IntresseStatus>,
 ): VirtualUser[] {

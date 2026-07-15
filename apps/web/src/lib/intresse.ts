@@ -146,10 +146,13 @@ const loadIntresseIndex = createIsomorphicFn()
   })
   .server(async (): Promise<IntresseIndexFile> => {
     const { readFile } = await import('node:fs/promises')
-    const { join } = await import('node:path')
+    const { fileURLToPath } = await import('node:url')
 
     try {
-      const raw = await readFile(join(process.cwd(), 'public/intresse.json'), 'utf-8')
+      const raw = await readFile(
+        fileURLToPath(new URL('../../public/intresse.json', import.meta.url)),
+        'utf-8',
+      )
       return JSON.parse(raw) as IntresseIndexFile
     } catch {
       return EMPTY_INTRESSE_INDEX
@@ -161,13 +164,13 @@ export async function getIntresseIndex(): Promise<IntresseIndexFile> {
 }
 
 export const getIntresseStatus = createServerFn({ method: 'GET' })
-  .inputValidator((refid: string) => refid)
+  .validator((refid: string) => refid)
   .handler(async ({ data: refid }): Promise<IntresseStatus | null> => {
     return fetchIntresseStatusForRefid(refid)
   })
 
 export const refreshIntresseIndex = createServerFn({ method: 'POST' })
-  .inputValidator((refids: string[]) => refids)
+  .validator((refids: string[]) => refids)
   .handler(async ({ data: refids }): Promise<IntresseIndexFile> => {
     const data: Record<string, IntresseStatus> = {}
     let completed = 0

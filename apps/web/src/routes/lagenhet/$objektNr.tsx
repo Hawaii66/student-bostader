@@ -17,7 +17,8 @@ export const Route = createFileRoute('/lagenhet/$objektNr')({
     return { lagenhet, intresseStatus }
   },
   head: ({ loaderData }) => {
-    const { lagenhet } = loaderData
+    const lagenhet = loaderData?.lagenhet
+    if (!lagenhet) return {}
 
     return {
       meta: [

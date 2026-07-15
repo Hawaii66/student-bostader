@@ -8,7 +8,7 @@ import {
   LoaderCircleIcon,
   RefreshCwIcon,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { BookabilityCell } from '#/components/BookabilityCell'
 import { Button } from '@/components/ui/button'
@@ -49,11 +49,6 @@ type KonkurrensViewProps = {
   onSearchChange: (search: KonkurrensSearch) => void
 }
 
-function getInitialIntresseIndex(serverIndex: IntresseIndexFile): IntresseIndexFile {
-  if (typeof window === 'undefined') return serverIndex
-  return pickIntresseIndex(serverIndex, loadStoredIntresseIndex())
-}
-
 export function KonkurrensView({
   lagenheter,
   initialIntresseIndex,
@@ -61,14 +56,17 @@ export function KonkurrensView({
   onSearchChange,
 }: KonkurrensViewProps) {
   const { favorites } = useFavoriteLagenheter()
-  const [intresseIndex, setIntresseIndex] = useState(() =>
-    getInitialIntresseIndex(initialIntresseIndex),
-  )
-  const [userPoangInput, setUserPoangInput] = useState(() => loadUserPoang())
+  const [intresseIndex, setIntresseIndex] = useState(initialIntresseIndex)
+  const [userPoangInput, setUserPoangInput] = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [refreshProgress, setRefreshProgress] = useState<{ current: number; total: number } | null>(
     null,
   )
+
+  useEffect(() => {
+    setIntresseIndex(pickIntresseIndex(initialIntresseIndex, loadStoredIntresseIndex()))
+    setUserPoangInput(loadUserPoang())
+  }, [initialIntresseIndex])
 
   const { virtualUserSort, showAllLagenheter } = useMemo(
     () => konkurrensSearchToState(search),
