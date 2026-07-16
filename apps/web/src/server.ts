@@ -1,12 +1,7 @@
-import startEntry from '@tanstack/react-start/server-entry'
-
-const startFetch =
-  typeof startEntry === 'function'
-    ? startEntry
-    : startEntry.fetch.bind(startEntry)
+import handler from '@tanstack/react-start/server-entry'
 
 export default {
-  fetch: startFetch,
+  fetch: handler.fetch,
   async scheduled(
     _controller: ScheduledController,
     env: Cloudflare.Env,

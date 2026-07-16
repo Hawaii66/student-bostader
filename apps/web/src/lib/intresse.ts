@@ -1,12 +1,10 @@
-import { createIsomorphicFn, createServerFn } from '@tanstack/react-start'
+import { createServerFn } from '@tanstack/react-start'
 
+import intresseData from '#/data/intresse.json'
 import type { IntresseIndexFile, IntresseStatus } from '#/types/intresse'
 
 const WIDGETS_BASE_URL = 'https://marknad.studentbostader.se/widgets/'
-const EMPTY_INTRESSE_INDEX: IntresseIndexFile = {
-  fetchedAt: '1970-01-01T00:00:00.000Z',
-  data: {},
-}
+const intresseIndex = intresseData as IntresseIndexFile
 
 function parseJsonp(body: string): unknown {
   const start = body.indexOf('(')
@@ -136,55 +134,8 @@ async function mapWithConcurrency<T>(
   )
 }
 
-async function readPublicIntresseJson(): Promise<Response | null> {
-  try {
-    const { env } = await import('cloudflare:workers')
-    if (env.ASSETS) {
-      return env.ASSETS.fetch(
-        new Request(new URL('/intresse.json', 'http://assets.local')),
-      )
-    }
-  } catch {
-    // Not running in a Workers runtime with ASSETS bound.
-  }
-
-  try {
-    const { readFile } = await import('node:fs/promises')
-    const { fileURLToPath } = await import('node:url')
-    const raw = await readFile(
-      fileURLToPath(new URL('../../public/intresse.json', import.meta.url)),
-      'utf-8',
-    )
-    return new Response(raw, {
-      headers: { 'content-type': 'application/json' },
-    })
-  } catch {
-    return null
-  }
-}
-
-const loadIntresseIndex = createIsomorphicFn()
-  .client(async (): Promise<IntresseIndexFile> => {
-    const response = await fetch(`${import.meta.env.BASE_URL}intresse.json`)
-    if (!response.ok) {
-      return EMPTY_INTRESSE_INDEX
-    }
-    return response.json() as Promise<IntresseIndexFile>
-  })
-  .server(async (): Promise<IntresseIndexFile> => {
-    try {
-      const response = await readPublicIntresseJson()
-      if (!response?.ok) {
-        return EMPTY_INTRESSE_INDEX
-      }
-      return response.json() as Promise<IntresseIndexFile>
-    } catch {
-      return EMPTY_INTRESSE_INDEX
-    }
-  })
-
 export async function getIntresseIndex(): Promise<IntresseIndexFile> {
-  return loadIntresseIndex()
+  return intresseIndex
 }
 
 export const getIntresseStatus = createServerFn({ method: 'GET' })

@@ -11,7 +11,7 @@ export type IntresseIndexFile = {
 
 const defaultOutputPath = join(
   fileURLToPath(new URL(".", import.meta.url)),
-  "../../web/public/intresse.json",
+  "../../web/src/data/intresse.json",
 );
 
 export async function saveIntresseIndex(

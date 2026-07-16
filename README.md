@@ -28,11 +28,13 @@ pnpm install
 
 ### Refresh apartment data
 
-Fetch all listings (and interest data) and write them into the web app’s public JSON files:
+Fetch all listings (and interest data) and write them into the web app’s embedded data files:
 
 ```bash
 pnpm scraper:save
 ```
+
+This writes `apps/web/src/data/lagenheter.json` and `apps/web/src/data/intresse.json`, which Vite bundles into the app.
 
 To print scraped listings as JSON without saving:
 
@@ -54,7 +56,7 @@ Open [http://localhost:3000](http://localhost:3000).
 pnpm build
 ```
 
-`pnpm build` always runs `scraper:save` (via the web package) so `lagenheter.json` and `intresse.json` are generated before Vite bundles static assets.
+`pnpm build` always runs `scraper:save` (via the web package) so `lagenheter.json` and `intresse.json` are generated before Vite bundles them.
 
 ### Deploy
 

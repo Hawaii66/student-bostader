@@ -10,7 +10,9 @@ dist
 .DS_Store
 
 response.md
+/apps/web/src/data/lagenheter.json
+/apps/web/src/data/intresse.json
+/apps/web/public/geocache.json
 /apps/web/public/lagenheter.json
 /apps/web/public/intresse.json
-/apps/web/public/geocache.json
 .pnpm-store

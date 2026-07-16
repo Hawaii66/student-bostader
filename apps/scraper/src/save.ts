@@ -6,7 +6,7 @@ import type { Lagenhet } from "./schema/lagenhet.js";
 
 const defaultOutputPath = join(
   fileURLToPath(new URL(".", import.meta.url)),
-  "../../web/public/lagenheter.json",
+  "../../web/src/data/lagenheter.json",
 );
 
 export async function saveLagenheter(
