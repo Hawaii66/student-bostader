@@ -1,33 +1,55 @@
-# student-bostader
+# Studentbostäder
 
-pnpm monorepo with a TanStack Start web app and a TypeScript scraper.
+## About
 
-## Structure
+A personal tool for browsing and comparing vacant student apartments from [Studentbostäder](https://www.studentbostader.se/) in Linköping.
+
+It scrapes the official housing market site, stores the listings locally, and serves them in a web app with filtering, favorites, and detail views. Beyond a plain listing browser, it also helps you reason about competition:
+
+- **Lediga lägenheter** — browse, filter, sort, and favorite available apartments
+- **Konkurrens** — see which queue points (`köpoäng`) have registered interest on which apartments, and how bookable your saved choices look
+- **Playoff** — simulate how apartments might be allocated based on queue points and interest registrations
+
+The repo is a pnpm monorepo with two apps:
 
 ```
 apps/
-  web/       # TanStack Start app
-  scraper/   # TypeScript scraper
+  web/       # TanStack Start web app
+  scraper/   # TypeScript scraper for marknad.studentbostader.se
 ```
 
-## Setup
+## How to use
+
+### Setup
 
 ```bash
 pnpm install
 ```
 
-## Commands
+### Refresh apartment data
+
+Fetch all listings (and interest data) and write them into the web app’s public JSON files:
 
 ```bash
-# Start the web app (http://localhost:3000)
-pnpm dev
+pnpm scraper:save
+```
 
-# Run the scraper once
+To print scraped listings as JSON without saving:
+
+```bash
 pnpm scraper
+```
 
-# Run the scraper in watch mode
-pnpm --filter @student-bostader/scraper dev
+### Run the web app
 
-# Build the web app
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Build
+
+```bash
 pnpm build
 ```
