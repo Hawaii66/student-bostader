@@ -136,6 +136,33 @@ async function mapWithConcurrency<T>(
   )
 }
 
+async function readPublicIntresseJson(): Promise<Response | null> {
+  try {
+    const { env } = await import('cloudflare:workers')
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(
+        new Request(new URL('/intresse.json', 'http://assets.local')),
+      )
+    }
+  } catch {
+    // Not running in a Workers runtime with ASSETS bound.
+  }
+
+  try {
+    const { readFile } = await import('node:fs/promises')
+    const { fileURLToPath } = await import('node:url')
+    const raw = await readFile(
+      fileURLToPath(new URL('../../public/intresse.json', import.meta.url)),
+      'utf-8',
+    )
+    return new Response(raw, {
+      headers: { 'content-type': 'application/json' },
+    })
+  } catch {
+    return null
+  }
+}
+
 const loadIntresseIndex = createIsomorphicFn()
   .client(async (): Promise<IntresseIndexFile> => {
     const response = await fetch(`${import.meta.env.BASE_URL}intresse.json`)
@@ -146,11 +173,8 @@ const loadIntresseIndex = createIsomorphicFn()
   })
   .server(async (): Promise<IntresseIndexFile> => {
     try {
-      const { env } = await import('cloudflare:workers')
-      const response = await env.ASSETS.fetch(
-        new Request(new URL('/intresse.json', 'http://assets.local')),
-      )
-      if (!response.ok) {
+      const response = await readPublicIntresseJson()
+      if (!response?.ok) {
         return EMPTY_INTRESSE_INDEX
       }
       return response.json() as Promise<IntresseIndexFile>

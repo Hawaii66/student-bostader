@@ -54,7 +54,7 @@ Open [http://localhost:3000](http://localhost:3000).
 pnpm build
 ```
 
-`pnpm build` always runs `scraper:save` so `lagenheter.json` and `intresse.json` are generated before Vite bundles static assets.
+`pnpm build` always runs `scraper:save` (via the web package) so `lagenheter.json` and `intresse.json` are generated before Vite bundles static assets.
 
 ### Deploy
 
@@ -72,14 +72,39 @@ The web app uses `@cloudflare/vite-plugin` and deploys as a Worker.
 # Preview the Worker build locally
 pnpm --filter @student-bostader/web preview
 
-# Deploy (from repo root; runs scraper:save first)
+# Deploy (from repo root; scrapes then builds)
 pnpm deploy
 ```
 
 `hawaiidev.sh` must be a zone on the same Cloudflare account. On deploy, Wrangler attaches the custom domain and Cloudflare manages DNS + TLS.
 
-For [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/), use the repo root as the build root:
+### Workers Builds
 
-- **Build command:** `pnpm build`
-- **Deploy command:** `pnpm --filter @student-bostader/web exec wrangler deploy`
-- **Root directory:** `/` (monorepo root)
+Use these dashboard settings (root must be the package that contains `wrangler.jsonc`):
+
+| Setting | Value |
+| --- | --- |
+| **Root directory** | `/apps/web` |
+| **Build command** | `pnpm build` |
+| **Deploy command** | `npx wrangler deploy` |
+
+`pnpm build` in `apps/web` runs the scraper first (`@student-bostader/scraper save`), then `vite build`. pnpm still installs the whole workspace, so the scraper package is available even with root set to `/apps/web`.
+
+### Daily rebuild (10:00)
+
+The Worker has a cron trigger (`0 8 * * *` UTC ≈ 10:00 Europe/Stockholm in summer) that POSTs a [Deploy Hook](https://developers.cloudflare.com/workers/ci-cd/builds/deploy-hooks/) so Workers Builds re-scrapes and redeploys.
+
+1. In the Worker: **Settings → Builds → Deploy Hooks** → create a hook for `main`, copy the URL.
+2. Set the secret (once, from `apps/web`):
+
+```bash
+pnpm --filter @student-bostader/web exec wrangler secret put DEPLOY_HOOK_URL
+```
+
+Paste the Deploy Hook URL when prompted. After the next deploy, the morning cron will trigger a full rebuild (scrape + build + deploy).
+
+To test without waiting for the cron:
+
+```bash
+curl -X POST "$DEPLOY_HOOK_URL"
+```

@@ -3,9 +3,13 @@
   "name": "student-bostader",
   "compatibility_date": "2026-07-16",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry",
+  "main": "./src/server.ts",
   "observability": {
     "enabled": true,
+  },
+  "triggers": {
+    // 08:00 UTC = 10:00 Europe/Stockholm (CEST). In winter (CET) this is 09:00 local.
+    "crons": ["0 8 * * *"],
   },
   "routes": [
     {

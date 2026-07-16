@@ -35,13 +35,33 @@ async function fetchLagenheterJson(): Promise<Lagenhet[]> {
   return response.json() as Promise<Lagenhet[]>
 }
 
+async function readPublicJson(filename: string): Promise<Response> {
+  try {
+    const { env } = await import('cloudflare:workers')
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(
+        new Request(new URL(`/${filename}`, 'http://assets.local')),
+      )
+    }
+  } catch {
+    // Not running in a Workers runtime with ASSETS bound.
+  }
+
+  const { readFile } = await import('node:fs/promises')
+  const { fileURLToPath } = await import('node:url')
+  const raw = await readFile(
+    fileURLToPath(new URL(`../../public/${filename}`, import.meta.url)),
+    'utf-8',
+  )
+  return new Response(raw, {
+    headers: { 'content-type': 'application/json' },
+  })
+}
+
 const loadLagenheter = createIsomorphicFn()
   .client(fetchLagenheterJson)
   .server(async (): Promise<Lagenhet[]> => {
-    const { env } = await import('cloudflare:workers')
-    const response = await env.ASSETS.fetch(
-      new Request(new URL('/lagenheter.json', 'http://assets.local')),
-    )
+    const response = await readPublicJson('lagenheter.json')
     if (!response.ok) {
       throw new Error(`Failed to load lägenheter: ${response.status}`)
     }
