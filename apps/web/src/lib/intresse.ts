@@ -145,15 +145,15 @@ const loadIntresseIndex = createIsomorphicFn()
     return response.json() as Promise<IntresseIndexFile>
   })
   .server(async (): Promise<IntresseIndexFile> => {
-    const { readFile } = await import('node:fs/promises')
-    const { fileURLToPath } = await import('node:url')
-
     try {
-      const raw = await readFile(
-        fileURLToPath(new URL('../../public/intresse.json', import.meta.url)),
-        'utf-8',
+      const { env } = await import('cloudflare:workers')
+      const response = await env.ASSETS.fetch(
+        new Request(new URL('/intresse.json', 'http://assets.local')),
       )
-      return JSON.parse(raw) as IntresseIndexFile
+      if (!response.ok) {
+        return EMPTY_INTRESSE_INDEX
+      }
+      return response.json() as Promise<IntresseIndexFile>
     } catch {
       return EMPTY_INTRESSE_INDEX
     }

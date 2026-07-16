@@ -4,14 +4,17 @@
   "packageManager": "pnpm@10.33.4",
   "scripts": {
     "dev": "pnpm --filter @student-bostader/web dev",
-    "build": "pnpm --filter @student-bostader/web build",
+    "build": "pnpm scraper:save && pnpm --filter @student-bostader/web build",
+    "deploy": "pnpm scraper:save && pnpm --filter @student-bostader/web deploy",
     "scraper": "pnpm --filter @student-bostader/scraper start",
     "scraper:save": "pnpm --filter @student-bostader/scraper save"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
-      "lightningcss"
+      "lightningcss",
+      "workerd",
+      "sharp"
     ]
   }
 }
