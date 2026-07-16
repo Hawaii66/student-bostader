@@ -26,11 +26,19 @@ export const Route = createRootRoute({
         name: 'description',
         content: site.description,
       },
+      {
+        property: 'og:url',
+        content: site.url,
+      },
     ],
     links: [
       {
         rel: 'stylesheet',
         href: appCss,
+      },
+      {
+        rel: 'canonical',
+        href: site.url,
       },
       {
         rel: 'icon',

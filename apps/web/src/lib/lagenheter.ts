@@ -27,22 +27,25 @@ export function buildGoogleEarthUrl(adress: string): string {
   return `https://earth.google.com/web/search/${buildMapsQuery(adress)}`
 }
 
+async function fetchLagenheterJson(): Promise<Lagenhet[]> {
+  const response = await fetch(`${import.meta.env.BASE_URL}lagenheter.json`)
+  if (!response.ok) {
+    throw new Error(`Failed to load lägenheter: ${response.status}`)
+  }
+  return response.json() as Promise<Lagenhet[]>
+}
+
 const loadLagenheter = createIsomorphicFn()
-  .client(async (): Promise<Lagenhet[]> => {
-    const response = await fetch(`${import.meta.env.BASE_URL}lagenheter.json`)
+  .client(fetchLagenheterJson)
+  .server(async (): Promise<Lagenhet[]> => {
+    const { env } = await import('cloudflare:workers')
+    const response = await env.ASSETS.fetch(
+      new Request(new URL('/lagenheter.json', 'http://assets.local')),
+    )
     if (!response.ok) {
       throw new Error(`Failed to load lägenheter: ${response.status}`)
     }
     return response.json() as Promise<Lagenhet[]>
-  })
-  .server(async (): Promise<Lagenhet[]> => {
-    const { readFile } = await import('node:fs/promises')
-    const { fileURLToPath } = await import('node:url')
-    const raw = await readFile(
-      fileURLToPath(new URL('../../public/lagenheter.json', import.meta.url)),
-      'utf-8',
-    )
-    return JSON.parse(raw) as Lagenhet[]
   })
 
 export async function getLagenheter(): Promise<Lagenhet[]> {

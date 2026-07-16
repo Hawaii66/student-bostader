@@ -14,7 +14,7 @@ The repo is a pnpm monorepo with two apps:
 
 ```
 apps/
-  web/       # TanStack Start web app
+  web/       # TanStack Start app (Cloudflare Workers)
   scraper/   # TypeScript scraper for marknad.studentbostader.se
 ```
 
@@ -53,3 +53,33 @@ Open [http://localhost:3000](http://localhost:3000).
 ```bash
 pnpm build
 ```
+
+`pnpm build` always runs `scraper:save` so `lagenheter.json` and `intresse.json` are generated before Vite bundles static assets.
+
+### Deploy
+
+```bash
+pnpm deploy
+```
+
+Deploys to Cloudflare Workers at **https://student-bostader.hawaiidev.sh** (scrapes, builds, then `wrangler deploy`).
+
+## Cloudflare
+
+The web app uses `@cloudflare/vite-plugin` and deploys as a Worker.
+
+```bash
+# Preview the Worker build locally
+pnpm --filter @student-bostader/web preview
+
+# Deploy (from repo root; runs scraper:save first)
+pnpm deploy
+```
+
+`hawaiidev.sh` must be a zone on the same Cloudflare account. On deploy, Wrangler attaches the custom domain and Cloudflare manages DNS + TLS.
+
+For [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/), use the repo root as the build root:
+
+- **Build command:** `pnpm build`
+- **Deploy command:** `pnpm --filter @student-bostader/web exec wrangler deploy`
+- **Root directory:** `/` (monorepo root)
