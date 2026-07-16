@@ -3,11 +3,13 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import { SiteHeader } from '#/components/SiteHeader'
+import { RouteErrorFallback } from '#/components/RouteErrorFallback'
 import { site } from '#/lib/site'
 
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
+  errorComponent: RouteErrorFallback,
   head: () => ({
     meta: [
       {

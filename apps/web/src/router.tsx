@@ -1,4 +1,6 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
+
+import { RouteErrorFallback } from '#/components/RouteErrorFallback'
 import { routeTree } from './routeTree.gen'
 
 export function getRouter() {
@@ -6,7 +8,8 @@ export function getRouter() {
     routeTree,
     scrollRestoration: true,
     defaultPreload: 'intent',
-    defaultPreloadStaleTime: 0,
+    defaultPreloadStaleTime: 30_000,
+    defaultErrorComponent: RouteErrorFallback,
   })
 
   return router

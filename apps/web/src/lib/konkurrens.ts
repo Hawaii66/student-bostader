@@ -16,6 +16,19 @@ export function filterRealPoang(poang: number[]): number[] {
   return poang.filter((value) => !isPlaceholderPoang(value))
 }
 
+export function uniqueRealPoang(topPoang: number[]): number[] {
+  const unique: number[] = []
+  const seen = new Set<number>()
+
+  for (const poang of topPoang) {
+    if (isPlaceholderPoang(poang) || seen.has(poang)) continue
+    seen.add(poang)
+    unique.push(poang)
+  }
+
+  return unique
+}
+
 export function hasRealIntresse(topPoang: number[]): boolean {
   return filterRealPoang(topPoang).length > 0
 }
@@ -115,7 +128,7 @@ export function calculateUserWouldRank(
   userPoang: number,
   topPoang: number[],
 ): number | null {
-  const realTopPoang = filterRealPoang(topPoang)
+  const realTopPoang = uniqueRealPoang(topPoang)
   if (realTopPoang.length === 0) return 1
   return realTopPoang.filter((poang) => poang > userPoang).length + 1
 }
@@ -141,10 +154,8 @@ export function buildVirtualUsers(
     const status = intresseIndex[lagenhet.refid]
     if (!status) continue
 
-    status.topPoang.forEach((poang, index) => {
-      if (isPlaceholderPoang(poang)) return
-
-      const rank = filterRealPoang(status.topPoang.slice(0, index + 1)).length
+    for (const [index, poang] of uniqueRealPoang(status.topPoang).entries()) {
+      const rank = index + 1
       let user = virtualUsersMap.get(poang)
       if (!user) {
         user = { poang, placements: [] }
@@ -158,7 +169,7 @@ export function buildVirtualUsers(
         rank,
         antalIntresse: status.antalIntresseanmalningar,
       })
-    })
+    }
   }
 
   return [...virtualUsersMap.values()].sort(
@@ -180,7 +191,7 @@ export function aggregateKonkurrens(
   const lagenhetKonkurrens: LagenhetKonkurrens[] = lagenheter.map((lagenhet) => {
     const intresseStatus = intresseIndex[lagenhet.refid] ?? null
     const topPoang = intresseStatus?.topPoang ?? []
-    const realTopPoang = filterRealPoang(topPoang)
+    const realTopPoang = uniqueRealPoang(topPoang)
 
     const topCompetitors: TopCompetitor[] = realTopPoang.map((poang, index) => ({
       poang,

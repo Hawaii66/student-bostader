@@ -96,6 +96,25 @@ describe('aggregateKonkurrens', () => {
     expect(spreadScore).toBeGreaterThan(dedicatedScore ?? 0)
   })
 
+  it('deduplicates repeated topPoang for the same lägenhet when building virtual users', () => {
+    const lagenhet = makeLagenhet({
+      objektNr: '92B0200C016',
+      refid: 'ref-1',
+      adress: 'Gatan 1',
+    })
+    const intresseIndex = {
+      'ref-1': { antalIntresseanmalningar: 10, topPoang: [153, 144, 144, 144, 132] },
+    }
+
+    const result = aggregateKonkurrens([lagenhet], intresseIndex)
+    const user144 = result.virtualUsers.find((user) => user.poang === 144)
+
+    expect(user144?.placements).toHaveLength(1)
+    expect(user144?.placements[0]?.objektNr).toBe('92B0200C016')
+    expect(user144?.placements[0]?.rank).toBe(2)
+    expect(result.lagenhetKonkurrens[0]?.topCompetitors).toHaveLength(3)
+  })
+
   it('marks user poang above all top 5 as beating all competitors', () => {
     const lagenhet = makeLagenhet({ objektNr: '1', refid: 'ref-1', adress: 'Gatan 1' })
     const intresseIndex = {

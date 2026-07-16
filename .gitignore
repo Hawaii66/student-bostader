@@ -12,4 +12,5 @@ dist
 response.md
 /apps/web/public/lagenheter.json
 /apps/web/public/intresse.json
+/apps/web/public/geocache.json
 .pnpm-store
